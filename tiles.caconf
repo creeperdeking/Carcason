@@ -1,0 +1,100 @@
+tile.001
+city_shield 0,1,2,3
+;
+tile.002
+city 0,1,3
+field 2
+;
+tile.003
+city_shield 0,1,3
+field 2
+;
+tile.004
+city 0,1,3
+road_end 2
+;
+tile.005
+city_shield 0,1,3
+road_end 2
+;
+tile.006
+city 1,3
+field 0,2
+;
+tile.007
+city_shield 1,3
+field 0,2
+;
+tile.008
+city 0,1
+field 2,3
+;
+tile.009
+city_shield 0,1
+field 2,3
+;
+tile.010
+city 0,1
+road 3,2
+;
+tile.011
+city_shield 0,1
+road 3,2
+;
+tile.012
+city 0
+city_1 3
+field 1,2
+;
+tile.013
+city 1
+city_1 3
+field 0,2
+;
+tile.014
+city 0
+field 1,2,3
+;
+tile.015
+city 0
+road 3,2
+field 1
+;
+tile.016
+city 0
+road 2,1
+field 3
+;
+tile.017
+city 0
+road_end 1,2,3
+;
+tile.018
+city 0
+road 1,3
+field 2
+;
+tile.019
+abbey
+field 0,1,2,3
+;
+tile.020
+abbey
+road_end 2
+field 0,1,3
+;
+tile.021
+road_end 0,1,2,3
+;
+tile.022
+road_end 1,2,3
+field 0
+;
+tile.023
+road 0,2
+field 1,3
+;
+tile.024
+road 2,1
+field 0,3
+;

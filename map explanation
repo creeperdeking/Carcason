@@ -1,0 +1,15 @@
+#Dont put unnecessaries caracters like spaces or comments
+
+#First, the current player number. The player number is his rank by alphabetic order
+0
+#Then comes the players:
+Alexis 7 1 0
+Tristan 7 1 50
+; # Dont forget!
+#then : positionX,positionY tileID rotation(trigonometric rotation = rotation*pi) pawn1_side:pawn1_element_id pawn2:pawn2 etc...
+0,0 tile.001 3 1:city
+0,1 tile.002 0 1:tileid
+1,1 tile.003 0 1:tileid
+;
+#This is the current state of the stack of tiles
+tile.004 tile.002 tile.002 tile.010 tile.015 tile.016
