@@ -235,7 +235,7 @@ class Game:
 
 	def countPoints(self):
 		print("On compte les bouses:")
-		#import pdb; pdb.set_trace()
+		import pdb; pdb.set_trace()
 
 		for element in self.currentTile.elements:
 			genericElement = element.split('_')[0]
@@ -276,7 +276,7 @@ class Game:
 									break
 
 						for cptr,i in enumerate(possibleSides):
-							if i == opposedSide:
+							if loopInt(i+newTile.rotation, 3) == opposedSide:
 								del possibleSides[cptr]
 								break
 						futureTileStack.append([newTile, possibleSides])
@@ -294,9 +294,12 @@ class Game:
 					break
 
 			if not open:
-				print("Nombre de points: ",len(tileArchiveStack)*2)
+				self.players[self.currentPlayer].score += len(tileArchiveStack)*2
 			else:
 				continue
+
+		print(self.players[self.currentPlayer].name, ":", self.players[self.currentPlayer].score)
+		return self.players[self.currentPlayer].score
 
 	def rotateTile(self):
 		self.currentTile.rotate()
@@ -352,7 +355,6 @@ class Game:
 			badPos = sorted(badPos)
 			for i in range(0,len(badPos)):
 				del self.possiblePos[badPos[len(badPos)-1-i]]
-
 
 	def showPossiblePos(self):
 		self.hidePossiblePos()

@@ -82,10 +82,10 @@ class GameEvents:
 					if side in element:
 						self.game.putPawn(element, side)
 
-
 		#Start a new turn:
 		if isPressedK(events.ENTERKEY):
 			if self.game.tilePut:
-				self.game.countPoints()
+				nbPoints = self.game.countPoints()
+				
 				if self.game.nextTurn() == False:
 					logic.endGame()
