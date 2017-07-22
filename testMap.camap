@@ -2,6 +2,8 @@
 Alexis 7 1 0
 Tristan 7 1 0
 ;
-0,-1 tile.014 0
+0,1 tile.014 2
+1,0 tile.014 1
+0,0 tile.012 0
 ;
-tile.014 tile.014 tile.014 tile.014 tile.014 tile.014
+tile.012 tile.012 tile.012 tile.014 tile.014 tile.024 tile.024 tile.024 tile.013
