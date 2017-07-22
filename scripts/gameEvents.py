@@ -86,6 +86,6 @@ class GameEvents:
 		#Start a new turn:
 		if isPressedK(events.ENTERKEY):
 			if self.game.tilePut:
-				self.game.endTurn()
+				#self.game.countPoints()
 				if self.game.nextTurn() == False:
 					logic.endGame()

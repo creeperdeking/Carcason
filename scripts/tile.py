@@ -36,24 +36,20 @@ class Tile:
 		self.pawns.append(Pawn(player, element))
 
 	def existElement(self, name, side):
-		if name == "city_1":
-			print("!!!!!!!!!!!!!!!!!!!!!!!")
 		found = False
 		genericName = name.split('_')[0]
-		elementName = ""
+		elementName = []
 		for element in self.elements:
 			if element.split('_')[0] == genericName:
 				found = True
-				elementName = element
-				break
+				elementName.append(element)
 
+		if self.ID == "tile.012":
+			print("BARACUDA")
 		if found:
-			if loopInt(side-self.rotation, 3) in self.elements[elementName]:
-				return True
-			for i in range(1,4):
-				if elementName+"_"+str(i) in self.elements:
-					 if loopInt(side-self.rotation, 3) in self.elements[elementName+"_"+str(i)]:
-						 return True
+			for i in elementName:
+				if loopInt(side-self.rotation, 3) in self.elements[i]:
+					return True
 		return False
 
 	def isCompatibleWith(self, side, tile):

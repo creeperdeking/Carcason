@@ -151,6 +151,18 @@ class Game:
 			self.map[key][2].position[0] = key.x
 			self.map[key][2].position[1] = key.y
 
+	def convertSideToVector(self, side):
+		sideVect = []
+		if side == 0:
+			sideVect = [0,1]
+		elif side == 1:
+			sideVect = [-1,0]
+		elif side == 2:
+			sideVect = [0,-1]
+		elif side == 3:
+			sideVect = [1,0]
+		return sideVect
+
 	def nextTurn(self):
 		if len(self.tileStack) == 0:
 			return False
@@ -201,16 +213,9 @@ class Game:
 
 		self.map[self.currentTile.position][1].addPawn(self.currentPlayer, elementID)
 		pawnObj = self.scene.addObject("pawn.00"+str(self.currentPlayer+1))
-		sideVect = []
+
 		#converting side:
-		if side == 0:
-			sideVect = [0,1]
-		elif side == 1:
-			sideVect = [-1,0]
-		elif side == 2:
-			sideVect = [0,-1]
-		elif side == 3:
-			sideVect = [1,0]
+		sideVect = convertSideToVector(side)
 
 		pawnObj.position[0] = self.currentTile.position.x + sideVect[0]*.30
 		pawnObj.position[1] = self.currentTile.position.y + sideVect[1]*.30
@@ -220,8 +225,39 @@ class Game:
 		self.pawnPut = True
 		return True
 
-	def endTurn(self):
-		print("On compte les bouses")
+	def countPoints(self):
+		print("On compte les bouses:")
+		for element in self.currentTile.elements:
+			if element == "field":
+				continue
+			currentTileStack = [ [self.currentTile, [self.currentTile.elements[element]]] ]
+			tileArchiveStack = []
+
+			removeStack = []
+			open = False
+			while currentTileStack:
+				for cpt,tile in enumerate(currentTileStack):
+					for side in tile[1]:
+						vect = convertSideToVector(side)
+						if not Position(tile.position.x+vect[0], tile.position.y+vect[1]) in self.map:
+							open = True
+							break
+						newTile = self.map[Position(tile.position.x+vect[0], tile.position.y+vect[1])][1]
+						opposedSide = loopInt(side+2, 3)
+						possibleSides = newTile.elements[element]
+						for cptr,i in enumerate(possibleSides):
+							if i == opposedSide:
+								del possibleSides[cptr]
+								break
+						currentTileStack.append(newTile, possibleSides)
+					tileArchiveStack.append(tile.position)
+					removeStack.append(cpt)
+					if open == True:
+						break
+				for i in range(0, len(removeStack)):
+					del removeStack[0]
+				if open == True:
+					continue
 
 	def rotateTile(self):
 		self.currentTile.rotate()
@@ -254,8 +290,6 @@ class Game:
 					possibilities.append(self.currentTile.isCompatibleWith(2, self.map[Position([i.x, i.y-1])][1]))
 				if Position([i.x-1, i.y]) in self.map:
 					possibilities.append(self.currentTile.isCompatibleWith(1, self.map[Position([i.x-1, i.y])][1]))
-				print(i.x, i.y)
-				print(possibilities)
 
 				nbBadSide = 0
 				for side in range(0,4):
@@ -265,11 +299,8 @@ class Game:
 							ok = False
 					if not ok:
 						nbBadSide+=1
-				print(nbBadSide)
 				if nbBadSide == 4:
 					badPos.append(cptr)
-				print("---------------")
-			print(badPos)
 			badPos = sorted(badPos)
 			for i in range(0,len(badPos)):
 				del self.possiblePos[badPos[len(badPos)-1-i]]
