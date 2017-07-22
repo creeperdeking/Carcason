@@ -28,7 +28,7 @@ class Tile:
 		self.rotation = int(0)
 
 		self.elements = elements
-		self.coordinate = Position()
+		self.position = Position()
 
 		self.pawns = []
 
@@ -44,8 +44,6 @@ class Tile:
 				found = True
 				elementName.append(element)
 
-		if self.ID == "tile.012":
-			print("BARACUDA")
 		if found:
 			for i in elementName:
 				if loopInt(side-self.rotation, 3) in self.elements[i]:

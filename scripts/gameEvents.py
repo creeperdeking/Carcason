@@ -60,7 +60,7 @@ class GameEvents:
 			self.camTracer.applyMovement((.15, 0, 0), True)
 
 		if isPressedK(events.SKEY) and isActivatedK(events.LEFTCTRLKEY):
-			self.game.saveMap("/home/kurisu/Documents/Projets/Carcassonne/testMap.camap")
+			self.game.saveMap("/home/kurisu/Documents/Projets/Carcason/testMap.camap")
 			print("Map saved!")
 
 		if isPressedK(events.RKEY):
@@ -86,6 +86,6 @@ class GameEvents:
 		#Start a new turn:
 		if isPressedK(events.ENTERKEY):
 			if self.game.tilePut:
-				#self.game.countPoints()
+				self.game.countPoints()
 				if self.game.nextTurn() == False:
 					logic.endGame()

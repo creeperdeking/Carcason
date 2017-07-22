@@ -97,6 +97,7 @@ class Game:
 				tileID = elements[1]
 				tile = copy.deepcopy(self.tiles[tileID])
 				tile.rotation = int(elements[2])
+				tile.position = Position(position)
 
 				for v in range(0,3):
 					del elements[0]
@@ -227,37 +228,55 @@ class Game:
 
 	def countPoints(self):
 		print("On compte les bouses:")
+		import pdb; pdb.set_trace()
+
 		for element in self.currentTile.elements:
 			if element == "field":
 				continue
-			currentTileStack = [ [self.currentTile, [self.currentTile.elements[element]]] ]
+
+			currentTileStack = [ [self.currentTile, self.currentTile.elements[element]] ]
 			tileArchiveStack = []
 
-			removeStack = []
 			open = False
 			while currentTileStack:
+				futureTileStack = []
+				removeStack = []
 				for cpt,tile in enumerate(currentTileStack):
 					for side in tile[1]:
-						vect = convertSideToVector(side)
-						if not Position(tile.position.x+vect[0], tile.position.y+vect[1]) in self.map:
+						side = loopInt(side-tile[0].rotation, 3)
+						vect = self.convertSideToVector(side)
+
+						pos = Position([tile[0].position.x+vect[0], tile[0].position.y+vect[1]])
+						if not pos in self.map:
 							open = True
 							break
-						newTile = self.map[Position(tile.position.x+vect[0], tile.position.y+vect[1])][1]
+						if pos in tileArchiveStack:
+							continue
+						newTile = self.map[pos][1]
 						opposedSide = loopInt(side+2, 3)
 						possibleSides = newTile.elements[element]
 						for cptr,i in enumerate(possibleSides):
 							if i == opposedSide:
 								del possibleSides[cptr]
 								break
-						currentTileStack.append(newTile, possibleSides)
-					tileArchiveStack.append(tile.position)
+						futureTileStack.append([newTile, possibleSides])
+
+					tileArchiveStack.append(tile[0].position)
 					removeStack.append(cpt)
-					if open == True:
+					if open:
 						break
+				removeStack = sorted(removeStack)
 				for i in range(0, len(removeStack)):
-					del removeStack[0]
-				if open == True:
-					continue
+					del currentTileStack[len(removeStack)-1-i]
+				for i in futureTileStack:
+					currentTileStack.append(i)
+				if open:
+					break
+
+			if not open:
+				print("Nombre de points: ",len(tileArchiveStack)*2)
+			else:
+				continue
 
 	def rotateTile(self):
 		self.currentTile.rotate()
