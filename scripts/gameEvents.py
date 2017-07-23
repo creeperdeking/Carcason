@@ -76,6 +76,8 @@ class GameEvents:
 				side = 3
 			elif isPressedK(events.DOWNARROWKEY):
 				side = 2
+			elif isPressedK(events.CTRLKEY):
+				side = 4
 			if side > -1:
 				valls = self.game.currentTile.elements.values()
 				for element in valls:
@@ -86,6 +88,6 @@ class GameEvents:
 		if isPressedK(events.ENTERKEY):
 			if self.game.tilePut:
 				nbPoints = self.game.countPoints()
-				
+
 				if self.game.nextTurn() == False:
 					logic.endGame()

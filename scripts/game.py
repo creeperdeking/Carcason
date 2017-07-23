@@ -29,6 +29,7 @@ class Game:
 		self.possiblePos = [] # Store the possible position that the currentTile can take
 		self.possiblePosFlags = []
 		self.pawnsObj = dict()
+		self.abbeyList = []
 
 		self.pawnPut = False # If the pawn is already put in this turn
 		self.tilePut = True # If the tile is already put this turn
@@ -207,6 +208,8 @@ class Game:
 			if position == i[0]:
 				if not (self.currentTile.rotation in i[1]):
 					return False
+		if self.currentTile.ID == "tile.019" or self.currentTile.ID == "tile.020":
+			self.abbeyList.append(position)
 		self.hidePossiblePos()
 		print("Putting tile")
 		self.addTile(self.currentTile.ID, position, self.currentTile.rotation)
@@ -234,9 +237,8 @@ class Game:
 		return True
 
 	def countPoints(self):
-		print("On compte les bouses:")
-		import pdb; pdb.set_trace()
-
+		#import pdb; pdb.set_trace()
+		nbPoints = 0
 		for element in self.currentTile.elements:
 			genericElement = element.split('_')[0]
 			if element == "field":
@@ -276,7 +278,7 @@ class Game:
 									break
 
 						for cptr,i in enumerate(possibleSides):
-							if loopInt(i+newTile.rotation, 3) == opposedSide:
+							if loopInt(i-newTile.rotation, 3) == opposedSide:
 								del possibleSides[cptr]
 								break
 						futureTileStack.append([newTile, possibleSides])
@@ -289,17 +291,28 @@ class Game:
 				for i in range(0, len(removeStack)):
 					del currentTileStack[len(removeStack)-1-i]
 				for i in futureTileStack:
-					currentTileStack.append(i)
+					existAlready = False
+					for k in currentTileStack:
+						if k[0] == i[0]:
+							existAlready = True
+							break
+					if not existAlready:
+						currentTileStack.append(i)
 				if open:
 					break
 
 			if not open:
-				self.players[self.currentPlayer].score += len(tileArchiveStack)*2
+				nbPoints += len(tileArchiveStack)*2
 			else:
 				continue
+		for abbeyPos in self.abbeyList:
+			if Position([abbeyPos.x, abbeyPos.y+1]) in self.map and Position([abbeyPos.x+1, abbeyPos.y+1]) in self.map and Position([abbeyPos.x+1, abbeyPos.y]) in self.map and Position([abbeyPos.x+1, abbeyPos.y-1]) in self.map and Position([abbeyPos.x, abbeyPos.y-1]) in self.map and Position([abbeyPos.x-1, abbeyPos.y-1]) in self.map and Position([abbeyPos.x-1, abbeyPos.y]) in self.map and Position([abbeyPos.x-1, abbeyPos.y-1]) in self.map:
+				nbPoints += 9
 
-		print(self.players[self.currentPlayer].name, ":", self.players[self.currentPlayer].score)
-		return self.players[self.currentPlayer].score
+		nbPoints += self.players[self.currentPlayer].score
+		self.players[self.currentPlayer].score = nbPoints
+		print(self.players[self.currentPlayer].name, ":", nbPoints)
+		return nbPoints
 
 	def rotateTile(self):
 		self.currentTile.rotate()

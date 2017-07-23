@@ -2,8 +2,6 @@
 Alexis 7 1 0
 Tristan 7 1 50
 ;
-0,0 tile.001 3 1:city
-0,1 tile.002 0 1:tileid
-1,1 tile.003 0 1:tileid
+0,0 tile.008 3 1:city
 ;
-tile.004 tile.002 tile.002 tile.010 tile.015 tile.016
+tile.008 tile.008 tile.008 tile.010 tile.015 tile.016
