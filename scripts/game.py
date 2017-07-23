@@ -19,22 +19,23 @@ class Player:
 #The class holding the whole game
 class Game:
 	def __init__(self, tileFilePath, mapFilePath):
-		self.players = [] # Store the players, filled by loadMapFromFile
-		self.loadTilesFromFile(tileFilePath) # Load the tiles caracteristics
-		self.tileStack = [] # Store the tile Stack
-		self.loadMapFromFile(mapFilePath) # Load a save
+		self.scene = logic.getCurrentScene()
 
 		self.currentTile = Tile("") # The name of the upper tile in the stack
 		self.tileObj = logic.getCurrentScene().objects["tile"]
 		self.possiblePos = [] # Store the possible position that the currentTile can take
 		self.possiblePosFlags = []
-		self.pawnsObj = dict()
+
 		self.abbeyList = []
 
 		self.pawnPut = False # If the pawn is already put in this turn
 		self.tilePut = True # If the tile is already put this turn
 
-		self.scene = logic.getCurrentScene()
+		self.players = [] # Store the players, filled by loadMapFromFile
+		self.loadTilesFromFile(tileFilePath) # Load the tiles caracteristics
+		self.tileStack = [] # Store the tile Stack
+		self.loadMapFromFile(mapFilePath) # Load a save
+
 		self.nextTurn()
 
 	def loadTilesFromFile(self, filePath):
@@ -106,6 +107,17 @@ class Game:
 				for j in elements:
 					pawnCarac = j.split(':')
 					tile.addPawn(pawnCarac[0], pawnCarac[1])
+				#import pdb; pdb.set_trace()
+				for pawn in tile.pawns:
+					pawnObj = self.scene.addObject("pawn.00"+str(int(pawn.player)+1))
+					if tile.elements[pawn.element] == []:
+						sideVect = [0,0]
+					else:
+						sideVect = self.convertSideToVector(tile.elements[pawn.element][0])
+
+					pawnObj.position[0] = int(position[0]) + sideVect[0]*.30
+					pawnObj.position[1] = int(position[1]) + sideVect[1]*.30
+
 
 				scene = logic.getCurrentScene()
 				newTileObj = scene.addObject(tileID)
@@ -166,6 +178,8 @@ class Game:
 			sideVect = [0,-1]
 		elif side == 3:
 			sideVect = [1,0]
+		elif side == 4:
+			sideVect = [0,0]
 		return sideVect
 
 	def nextTurn(self):
@@ -226,11 +240,10 @@ class Game:
 		pawnObj = self.scene.addObject("pawn.00"+str(self.currentPlayer+1))
 
 		#converting side:
-		sideVect = convertSideToVector(side)
+		sideVect = self.convertSideToVector(side)
 
 		pawnObj.position[0] = self.currentTile.position.x + sideVect[0]*.30
 		pawnObj.position[1] = self.currentTile.position.y + sideVect[1]*.30
-		self.pawnsObj[self.currentTile.position] = pawnObj
 		self.player.nbPawns -= 1
 
 		self.pawnPut = True
@@ -300,18 +313,32 @@ class Game:
 						currentTileStack.append(i)
 				if open:
 					break
+			#import pdb; pdb.set_trace()
+			playersPoints = [0,0,0,0,0,0]
+			for tilePos in tileArchiveStack:
+				for pawn in self.map[tilePos][1].pawns:
+					if pawn.element == element:
+						playersPoints[int(pawn.player)] += 1
 
+			playerWinner = []
+			oldPlayerPoints = 0
+			for cptr,i in enumerate(playersPoints):
+				if i > oldPlayerPoints:
+					playerWinner = [cptr]
+					oldPlayerPoints = i
+				elif i == oldPlayerPoints:
+					playerWinner.append(cptr)
 			if not open:
-				nbPoints += len(tileArchiveStack)*2
+				for player in playerWinner:
+					self.players[player].score += len(tileArchiveStack)*2
 			else:
 				continue
 		for abbeyPos in self.abbeyList:
 			if Position([abbeyPos.x, abbeyPos.y+1]) in self.map and Position([abbeyPos.x+1, abbeyPos.y+1]) in self.map and Position([abbeyPos.x+1, abbeyPos.y]) in self.map and Position([abbeyPos.x+1, abbeyPos.y-1]) in self.map and Position([abbeyPos.x, abbeyPos.y-1]) in self.map and Position([abbeyPos.x-1, abbeyPos.y-1]) in self.map and Position([abbeyPos.x-1, abbeyPos.y]) in self.map and Position([abbeyPos.x-1, abbeyPos.y-1]) in self.map:
 				nbPoints += 9
 
-		nbPoints += self.players[self.currentPlayer].score
-		self.players[self.currentPlayer].score = nbPoints
-		print(self.players[self.currentPlayer].name, ":", nbPoints)
+		for player in self.players:
+			print(player.name, ":", player.score)
 		return nbPoints
 
 	def rotateTile(self):

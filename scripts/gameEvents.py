@@ -76,12 +76,20 @@ class GameEvents:
 				side = 3
 			elif isPressedK(events.DOWNARROWKEY):
 				side = 2
-			elif isPressedK(events.CTRLKEY):
+			elif isPressedK(events.RIGHTCTRLKEY):
 				side = 4
+
 			if side > -1:
-				valls = self.game.currentTile.elements.values()
-				for element in valls:
-					if side in element:
+				correctedSide = side
+				if not side == 4:
+					correctedSide = loopInt(side-self.game.currentTile.rotation, 3)
+					print(correctedSide)
+				for element in self.game.currentTile.elements:
+					sides = self.game.currentTile.elements[element]
+					if correctedSide == 4:
+						if not sides:
+							self.game.putPawn(element, side)
+					elif correctedSide in sides:
 						self.game.putPawn(element, side)
 
 		#Start a new turn:
@@ -90,4 +98,11 @@ class GameEvents:
 				nbPoints = self.game.countPoints()
 
 				if self.game.nextTurn() == False:
-					logic.endGame()
+					winner = 0
+					for cptr,player in enumerate(self.game.players):
+						if player.score > self.game.players[winner].score:
+							winner = cptr
+					obj = self.scene.addObject("pawn.00"+str(winner))
+					obj.scaling *= 9
+					obj.position = self.camTracer.position
+					obj.position.z = 0
