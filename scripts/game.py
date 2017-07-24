@@ -218,10 +218,15 @@ class Game:
 	def putTile(self, position):
 		if self.tilePut: #or (position in self.possiblePos) == False:
 			return False
+		possiblePos = False
+		#import pdb; pdb.set_trace()
 		for i in self.possiblePos:
 			if position == i[0]:
+				possiblePos = True
 				if not (self.currentTile.rotation in i[1]):
 					return False
+		if not possiblePos:
+			return False
 		if self.currentTile.ID == "tile.019" or self.currentTile.ID == "tile.020":
 			self.abbeyList.append(position)
 		self.hidePossiblePos()
@@ -235,6 +240,67 @@ class Game:
 	def putPawn(self, elementID, side):
 		if self.pawnPut or self.player.nbPawns == 0:
 			return False
+		"""
+		genericElement = elementID.split('_')[0]
+		if elementID != "field":
+			# This is the stack of the tiles that have to be dealed with
+			currentTileStack = [ [self.currentTile, self.currentTile.elements[elementID]] ]
+			#This is the old tiles already done
+			tileArchiveStack = []
+
+			while currentTileStack:
+				futureTileStack = []
+				removeStack = []
+				for cpt,tile in enumerate(currentTileStack):
+					for side in tile[1]:
+						side = loopInt(side+tile[0].rotation, 3)
+						vect = self.convertSideToVector(side)
+
+						pos = Position([tile[0].position.x+vect[0], tile[0].position.y+vect[1]])
+						if not pos in self.map:
+							continue
+						if pos in tileArchiveStack:
+							continue
+						newTile = self.map[pos][1]
+						opposedSide = loopInt(side+2, 3)
+						possibleSides = []
+						#import pdb; pdb.set_trace()
+						for e in newTile.elements:
+							boule = False
+							if e.split('_')[0] == genericElement:
+								for a in newTile.elements[e]:
+									if loopInt(a+newTile.rotation, 3) == opposedSide:
+										possibleSides = newTile.elements[e]
+										boule = True
+										break
+								if boule:
+									break
+
+						for cptr,i in enumerate(possibleSides):
+							if loopInt(i-newTile.rotation, 3) == opposedSide:
+								del possibleSides[cptr]
+								break
+						futureTileStack.append([newTile, possibleSides])
+
+					tileArchiveStack.append(tile[0].position)
+					removeStack.append(cpt)
+				removeStack = sorted(removeStack)
+				for i in range(0, len(removeStack)):
+					del currentTileStack[len(removeStack)-1-i]
+				for i in futureTileStack:
+					existAlready = False
+					for k in currentTileStack:
+						if k[0] == i[0]:
+							existAlready = True
+							break
+					if not existAlready:
+						currentTileStack.append(i)
+			#import pdb; pdb.set_trace()
+			for tilePos in tileArchiveStack:
+				for pawn in self.map[tilePos][1].pawns:
+					if pawn.element == elementID:
+						return False
+		"""
 
 		self.map[self.currentTile.position][1].addPawn(self.currentPlayer, elementID)
 		pawnObj = self.scene.addObject("pawn.00"+str(self.currentPlayer+1))
