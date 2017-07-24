@@ -4,8 +4,8 @@ from scripts.gameEvents import *
 
 def main():
 	obj = logic.getCurrentController().owner
-	
-	obj["myGame"] = Game("/home/kurisu/Documents/Projets/Carcason/tiles.caconf", "/home/kurisu/Documents/Projets/Carcason/testMap.camap")
+
+	obj["myGame"] = Game("/home/kurisu/Documents/Projets/Carcason/tiles.caconf", "/home/kurisu/Documents/Projets/Carcason/testMap.camap", "/home/kurisu/Documents/Projets/Carcason/defaultStack.caconf")
 	obj["GameEvents"] = GameEvents(obj["myGame"])
 	myGame = obj["myGame"]
 	"""

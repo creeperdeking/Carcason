@@ -7,6 +7,7 @@ from scripts.tile import *
 import math
 import copy
 from mathutils import Matrix
+import random
 
 class Player:
 	def __init__(self, name):
@@ -18,7 +19,7 @@ class Player:
 
 #The class holding the whole game
 class Game:
-	def __init__(self, tileFilePath, mapFilePath):
+	def __init__(self, tileFilePath, mapFilePath, defaultStackPath):
 		self.scene = logic.getCurrentScene()
 
 		self.currentTile = Tile("") # The name of the upper tile in the stack
@@ -34,7 +35,7 @@ class Game:
 		self.players = [] # Store the players, filled by loadMapFromFile
 		self.loadTilesFromFile(tileFilePath) # Load the tiles caracteristics
 		self.tileStack = [] # Store the tile Stack
-		self.loadMapFromFile(mapFilePath) # Load a save
+		self.loadMapFromFile(mapFilePath, defaultStackPath) # Load a save
 
 		self.nextTurn()
 
@@ -70,7 +71,7 @@ class Game:
 					elements[name] = list(map(int, words[0].split(',')))
 		configFile.close()
 
-	def loadMapFromFile(self, filePath):
+	def loadMapFromFile(self, filePath, defaultStackPath):
 		self.map = dict()
 
 		configFile = open(filePath, "r")
@@ -126,6 +127,13 @@ class Game:
 			else:
 				self.tileStack = list(elements)
 				break
+		if self.tileStack[0] == "none":
+			defaultStackFile = open(defaultStackPath, "r")
+			fileContent = defaultStackFile.read()
+			fileTab = fileContent.split(' ')
+			random.shuffle(fileTab)
+			self.tileStack = fileTab
+
 
 		configFile.close()
 
@@ -219,7 +227,7 @@ class Game:
 		if self.tilePut: #or (position in self.possiblePos) == False:
 			return False
 		possiblePos = False
-		#import pdb; pdb.set_trace()
+
 		for i in self.possiblePos:
 			if position == i[0]:
 				possiblePos = True
@@ -237,15 +245,15 @@ class Game:
 
 		return True
 
-	def putPawn(self, elementID, side):
+	def putPawn(self, elementID, realPawnSide):
 		if self.pawnPut or self.player.nbPawns == 0:
 			return False
-		"""
+		#import pdb; pdb.set_trace()
 		genericElement = elementID.split('_')[0]
 		if elementID != "field":
 			# This is the stack of the tiles that have to be dealed with
 			currentTileStack = [ [self.currentTile, self.currentTile.elements[elementID]] ]
-			#This is the old tiles already done
+			#This is the old tiles already done:
 			tileArchiveStack = []
 
 			while currentTileStack:
@@ -300,13 +308,13 @@ class Game:
 				for pawn in self.map[tilePos][1].pawns:
 					if pawn.element == elementID:
 						return False
-		"""
+
 
 		self.map[self.currentTile.position][1].addPawn(self.currentPlayer, elementID)
 		pawnObj = self.scene.addObject("pawn.00"+str(self.currentPlayer+1))
 
 		#converting side:
-		sideVect = self.convertSideToVector(side)
+		sideVect = self.convertSideToVector(realPawnSide)
 
 		pawnObj.position[0] = self.currentTile.position.x + sideVect[0]*.30
 		pawnObj.position[1] = self.currentTile.position.y + sideVect[1]*.30
