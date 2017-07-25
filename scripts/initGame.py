@@ -5,7 +5,7 @@ from scripts.gameEvents import *
 def main():
 	obj = logic.getCurrentController().owner
 
-	obj["myGame"] = Game("/home/kurisu/Documents/Projets/Carcason/tiles.caconf", "/home/kurisu/Documents/Projets/Carcason/testMap.camap", "/home/kurisu/Documents/Projets/Carcason/defaultStack.caconf")
+	obj["myGame"] = Game(bge.logic.expandPath("//tiles.caconf"), bge.logic.expandPath("//testMap.camap"), bge.logic.expandPath("//defaultStack.caconf"))
 	obj["GameEvents"] = GameEvents(obj["myGame"])
 	myGame = obj["myGame"]
 	"""
