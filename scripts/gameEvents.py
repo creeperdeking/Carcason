@@ -100,6 +100,9 @@ class GameEvents:
 		#Start a new turn:
 		if isPressedK(events.ENTERKEY):
 			if self.game.tilePut:
+				self.game.countPoints()
+				for player in self.game.players:
+					print(player.name, ":", player.score)
 				# We have to find a winner:
 				if self.game.nextTurn() == False:
 					winner = 0

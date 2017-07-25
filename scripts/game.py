@@ -7,6 +7,7 @@ import math
 import copy
 from mathutils import Matrix
 import random
+import pdb
 
 #The class holding the whole game
 class Game:
@@ -128,7 +129,7 @@ class Game:
 			tile = self.map[key]
 			pawnsString = " "
 
-			for pawn in tile[1].pawns:
+			for pawn in tile[0].pawns:
 				pawnsString += str(pawn.player)+":"+pawn.element+" "
 			pawnsString = pawnsString[:-1]
 			configFile.write(str(key.x)+","+str(key.y)+" "+tile[0].ID+" "+str(tile[0].rotation)+pawnsString+"\n")
@@ -245,11 +246,72 @@ class Game:
 		#converting side:
 		sideVect = self.convertSideToVector(side)
 
-		pawnObj.position[0] = self.currentTile.position.x + sideVect[0]*.30
-		pawnObj.position[1] = self.currentTile.position.y + sideVect[1]*.30
+		pawnObj.position[0] = position.x + sideVect[0]*.30
+		pawnObj.position[1] = position.y + sideVect[1]*.30
 
 		self.pawnPut = True
 		return True
+
+	def ridePath(self, element):
+		isOpen = False
+		genericElement = element.split('_')[0]
+		# This is the stack of the tiles that have to be dealed with
+		currentTileStack = [ [self.currentTile, self.currentTile.elements[element]] ]
+		#This is the old tiles already done:
+		tileArchiveStack = []
+
+		while currentTileStack:
+			futureTileStack = []
+			removeStack = []
+			for cpt,tile in enumerate(currentTileStack):
+				for side in tile[1]:
+					side = loopInt(side+tile[0].rotation, 3)
+					vect = self.convertSideToVector(side)
+
+					pos = Position([tile[0].position.x+vect[0], tile[0].position.y+vect[1]])
+					if not pos in self.map:
+						isOpen = True
+						continue
+					if pos in tileArchiveStack:
+						continue
+					newTile = self.map[pos][0]
+					opposedSide = loopInt(side+2, 3)
+					possibleSides = []
+
+					for e in newTile.elements:
+						boule = False
+						if e.split('_')[0] == genericElement:
+							for a in newTile.elements[e]:
+								if loopInt(a+newTile.rotation, 3) == opposedSide:
+									possibleSides = newTile.elements[e]
+									boule = True
+									break
+							if boule:
+								break
+
+					for cptr,i in enumerate(possibleSides):
+						if loopInt(i+newTile.rotation, 3) == opposedSide:
+							del possibleSides[cptr]
+							break
+					futureTileStack.append([newTile, possibleSides])
+
+				tileArchiveStack.append(tile[0].position)
+				removeStack.append(cpt)
+
+			removeStack = sorted(removeStack)
+			for i in range(0, len(removeStack)):
+				del currentTileStack[len(removeStack)-1-i]
+
+			for i in futureTileStack:
+				existAlready = False
+				for k in currentTileStack:
+					if k[0] == i[0]:
+						existAlready = True
+						break
+				if not existAlready:
+					currentTileStack.append(i)
+
+		return [tileArchiveStack, isOpen]
 
 	def putPawn(self, elementID):
 		if self.pawnPut or self.player.nbPawns == 0:
@@ -257,60 +319,7 @@ class Game:
 
 		genericElement = elementID.split('_')[0]
 		if elementID != "field":
-			# This is the stack of the tiles that have to be dealed with
-			currentTileStack = [ [self.currentTile, self.currentTile.elements[elementID]] ]
-			#This is the old tiles already done:
-			tileArchiveStack = []
-
-			while currentTileStack:
-				futureTileStack = []
-				removeStack = []
-				for cpt,tile in enumerate(currentTileStack):
-					for side in tile[1]:
-						side = loopInt(side+tile[0].rotation, 3)
-						vect = self.convertSideToVector(side)
-
-						pos = Position([tile[0].position.x+vect[0], tile[0].position.y+vect[1]])
-						if not pos in self.map:
-							continue
-						if pos in tileArchiveStack:
-							continue
-						newTile = self.map[pos][0]
-						opposedSide = loopInt(side+2, 3)
-						possibleSides = []
-
-						for e in newTile.elements:
-							boule = False
-							if e.split('_')[0] == genericElement:
-								for a in newTile.elements[e]:
-									if loopInt(a+newTile.rotation, 3) == opposedSide:
-										possibleSides = newTile.elements[e]
-										boule = True
-										break
-								if boule:
-									break
-
-						for cptr,i in enumerate(possibleSides):
-							if loopInt(i+newTile.rotation, 3) == opposedSide:
-								del possibleSides[cptr]
-								break
-						futureTileStack.append([newTile, possibleSides])
-
-					tileArchiveStack.append(tile[0].position)
-					removeStack.append(cpt)
-				removeStack = sorted(removeStack)
-				for i in range(0, len(removeStack)):
-					del currentTileStack[len(removeStack)-1-i]
-				for i in futureTileStack:
-					existAlready = False
-					for k in currentTileStack:
-						if k[0] == i[0]:
-							existAlready = True
-							break
-					if not existAlready:
-						currentTileStack.append(i)
-
-			for tilePos in tileArchiveStack:
+			for tilePos in self.ridePath(elementID)[0]:
 				for pawn in self.map[tilePos][0].pawns:
 					if pawn.element == elementID:
 						return False
@@ -327,64 +336,12 @@ class Game:
 			if genericElement == "field" or genericElement == "abbey":
 				continue
 
-			currentTileStack = [ [self.currentTile, self.currentTile.elements[element]] ]
-			tileArchiveStack = []
-
-			open = False
-			while currentTileStack:
-				futureTileStack = []
-				removeStack = []
-				for cpt,tile in enumerate(currentTileStack):
-					for side in tile[1]:
-						side = loopInt(side+tile[0].rotation, 3)
-						vect = self.convertSideToVector(side)
-
-						pos = Position([tile[0].position.x+vect[0], tile[0].position.y+vect[1]])
-						if not pos in self.map:
-							open = True
-							break
-						if pos in tileArchiveStack:
-							continue
-						newTile = self.map[pos][0]
-						opposedSide = loopInt(side+2, 3)
-						possibleSides = []
-						#import pdb; pdb.set_trace()
-						for e in newTile.elements:
-							boule = False
-							if e.split('_')[0] == genericElement:
-								for a in newTile.elements[e]:
-									if loopInt(a+newTile.rotation, 3) == opposedSide:
-										possibleSides = newTile.elements[e]
-										boule = True
-										break
-								if boule:
-									break
-
-						for cptr,i in enumerate(possibleSides):
-							if loopInt(i+newTile.rotation, 3) == opposedSide:
-								del possibleSides[cptr]
-								break
-						futureTileStack.append([newTile, possibleSides])
-					if open:
-						break
-					tileArchiveStack.append(tile[0].position)
-					removeStack.append(cpt)
-				if open:
-					break
-				removeStack = sorted(removeStack)
-				for i in range(0, len(removeStack)):
-					del currentTileStack[len(removeStack)-1-i]
-				for i in futureTileStack:
-					existAlready = False
-					for k in currentTileStack:
-						if k[0] == i[0]:
-							existAlready = True
-							break
-					if not existAlready:
-						currentTileStack.append(i)
-			if open:
+			ridePathResult = self.ridePath(element)
+			tileArchiveStack = ridePathResult[0]
+			isOpen = ridePathResult[1]
+			if isOpen:
 				continue
-			#import pdb; pdb.set_trace()
+
 			playersPoints = [0,0,0,0,0,0]
 			for tilePos in tileArchiveStack:
 				for cp,pawn in enumerate(self.map[tilePos][0].pawns):
@@ -401,6 +358,7 @@ class Game:
 
 			if playersPoints == [0,0,0,0,0,0]:
 				continue
+
 			playerWinner = []
 			oldPlayerPoints = 0
 			for cptr,i in enumerate(playersPoints):
@@ -415,8 +373,7 @@ class Game:
 
 		for ptrcp,abbeyPos in enumerate(self.abbeyList):
 			if Position([abbeyPos.x, abbeyPos.y+1]) in self.map and Position([abbeyPos.x+1, abbeyPos.y+1]) in self.map and Position([abbeyPos.x+1, abbeyPos.y]) in self.map and Position([abbeyPos.x+1, abbeyPos.y-1]) in self.map and Position([abbeyPos.x, abbeyPos.y-1]) in self.map and Position([abbeyPos.x-1, abbeyPos.y-1]) in self.map and Position([abbeyPos.x-1, abbeyPos.y]) in self.map and Position([abbeyPos.x-1, abbeyPos.y-1]) in self.map:
-				for cp,pawn in enumerate(self.map[abbeyPos][1].pawns):
-					#import pdb; pdb.set_trace()
+				for cp,pawn in enumerate(self.map[abbeyPos][0].pawns):
 					if pawn.element == "abbey":
 						for cptr in range(0, len(self.players)):
 							if pawn.player == cptr:
@@ -426,45 +383,43 @@ class Game:
 									del self.map[abbeyPos][0].pawns[cp]
 								self.players[cptr].score += 9
 
-		for player in self.players:
-			print(player.name, ":", player.score)
-
 	def rotateTile(self):
 		self.currentTile.rotate()
 
 	def findPossiblePos(self):
 		self.possiblePos = []
 
-		for cle in self.map:
+		for key in self.map:
+			#First, create the list of the surrounding positions of the tile:
 			pp = []
 			for i in self.possiblePos:
 				pp.append(i[0])
-			if not Position([cle.x, cle.y+1]) in self.map:
-				if not Position([cle.x, cle.y+1]) in pp:
-					self.possiblePos.append([Position([cle.x, cle.y+1]), []])
-			if not Position([cle.x+1, cle.y]) in self.map:
-				if not Position([cle.x+1, cle.y]) in pp:
-					self.possiblePos.append([Position([cle.x+1, cle.y]), []])
-			if not Position([cle.x, cle.y-1]) in self.map:
-				if not Position([cle.x, cle.y-1]) in pp:
-					self.possiblePos.append([Position([cle.x, cle.y-1]), []])
-			if not Position([cle.x-1, cle.y]) in self.map:
-				if not Position([cle.x-1, cle.y]) in pp:
-					self.possiblePos.append([Position([cle.x-1, cle.y]), []])
+			if not Position([key.x, key.y+1]) in self.map:
+				if not Position([key.x, key.y+1]) in pp:
+					self.possiblePos.append([Position([key.x, key.y+1]), []])
+			if not Position([key.x+1, key.y]) in self.map:
+				if not Position([key.x+1, key.y]) in pp:
+					self.possiblePos.append([Position([key.x+1, key.y]), []])
+			if not Position([key.x, key.y-1]) in self.map:
+				if not Position([key.x, key.y-1]) in pp:
+					self.possiblePos.append([Position([key.x, key.y-1]), []])
+			if not Position([key.x-1, key.y]) in self.map:
+				if not Position([key.x-1, key.y]) in pp:
+					self.possiblePos.append([Position([key.x-1, key.y]), []])
 
 			badPos = []
-			for cptr,i in enumerate(self.possiblePos):
+			for cptr,posPos in enumerate(self.possiblePos):
 				goodSides = []
-				# Get, for each side of the possible position, the list of compatible rotations
+				# Get, for each side of the possible position, the list of compatible rotations:
 				possibilities = []
-				if Position([i[0].x, i[0].y+1]) in self.map:
-					possibilities.append(self.currentTile.isCompatibleWith(0, self.map[Position([i[0].x, i[0].y+1])][0]))
-				if Position([i[0].x+1, i[0].y]) in self.map:
-					possibilities.append(self.currentTile.isCompatibleWith(3, self.map[Position([i[0].x+1, i[0].y])][0]))
-				if Position([i[0].x, i[0].y-1]) in self.map:
-					possibilities.append(self.currentTile.isCompatibleWith(2, self.map[Position([i[0].x, i[0].y-1])][0]))
-				if Position([i[0].x-1, i[0].y]) in self.map:
-					possibilities.append(self.currentTile.isCompatibleWith(1, self.map[Position([i[0].x-1, i[0].y])][0]))
+				if Position([posPos[0].x, posPos[0].y+1]) in self.map:
+					possibilities.append(self.currentTile.isCompatibleWith(0, self.map[Position([posPos[0].x, posPos[0].y+1])][0]))
+				if Position([posPos[0].x+1, posPos[0].y]) in self.map:
+					possibilities.append(self.currentTile.isCompatibleWith(3, self.map[Position([posPos[0].x+1, posPos[0].y])][0]))
+				if Position([posPos[0].x, posPos[0].y-1]) in self.map:
+					possibilities.append(self.currentTile.isCompatibleWith(2, self.map[Position([posPos[0].x, posPos[0].y-1])][0]))
+				if Position([posPos[0].x-1, posPos[0].y]) in self.map:
+					possibilities.append(self.currentTile.isCompatibleWith(1, self.map[Position([posPos[0].x-1, posPos[0].y])][0]))
 				# Test if a rotation is common to all side:
 				nbBadSide = 0
 				for side in range(0,4):
@@ -476,7 +431,7 @@ class Game:
 						nbBadSide+=1
 					else:
 						goodSides.append(side)
-				i[1] = goodSides
+				posPos[1] = goodSides
 				if nbBadSide == 4:
 					badPos.append(cptr)
 
