@@ -2,21 +2,6 @@
 Alexis 4 1 0
 Tristan 5 1 0
 ;
-0,1 tile.017 0
--2,3 tile.010 3
--1,1 tile.020 1 0:abbey
-0,0 tile.022 3
--2,2 tile.023 0
--1,2 tile.019 0 1:abbey
-2,1 tile.022 0
-1,1 tile.023 1
-2,0 tile.024 2
-2,-1 tile.023 1
--3,3 tile.018 0
--2,4 tile.010 2
-0,-1 tile.021 0
-1,0 tile.019 0 1:abbey
-1,-1 tile.023 3
-0,2 tile.006 1 0:city
+0,0 tile.015 0
 ;
-tile.017 tile.008 tile.017 tile.015 tile.009 tile.016 tile.016 tile.023 tile.024
+none
