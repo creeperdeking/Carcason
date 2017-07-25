@@ -83,7 +83,6 @@ class GameEvents:
 				correctedSide = side
 				if not side == 4:
 					correctedSide = loopInt(side-self.game.currentTile.rotation, 3)
-					print(correctedSide)
 				for element in self.game.currentTile.elements:
 					sides = self.game.currentTile.elements[element]
 					if correctedSide == 4:
@@ -102,7 +101,7 @@ class GameEvents:
 					for cptr,player in enumerate(self.game.players):
 						if player.score > self.game.players[winner].score:
 							winner = cptr
-					obj = self.scene.addObject("pawn.00"+str(winner))
+					obj = self.scene.addObject("pawn.00"+str(winner+1))
 					obj.scaling *= 9
 					obj.position = self.camTracer.position
 					obj.position.z = 0

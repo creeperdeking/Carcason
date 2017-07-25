@@ -19,7 +19,7 @@ class Position:
 
 class Pawn:
 	def __init__(self, player, element):
-		self.player = player
+		self.player = int(player)
 		self.element = element
 
 class Tile:
