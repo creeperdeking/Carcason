@@ -25,7 +25,7 @@ class Pawn:
 class Tile:
 	def __init__(self, ID, elements=dict()):
 		self.ID = ID
-		self.rotation = int(0)
+		self.rotation = 0
 
 		self.elements = elements
 		self.position = Position()
@@ -64,3 +64,11 @@ class Tile:
 
 	def rotate(self):
 		self.rotation = loopInt(self.rotation+1, 3)
+
+class Player:
+	def __init__(self, name):
+		self.name = name
+		self.nbPawns = int(7)
+		self.nbBigPawns = 1
+
+		self.score = 0

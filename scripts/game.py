@@ -1,4 +1,3 @@
-# Fait par Antoine Gros, c'est le meilleur et c'est celui qui l'a fait vraiment!
 import bge
 import bge.logic as logic
 import bge.events as events
@@ -9,36 +8,31 @@ import copy
 from mathutils import Matrix
 import random
 
-class Player:
-	def __init__(self, name):
-		self.name = name
-		self.nbPawns = int(7)
-		self.nbBigPawns = 1
-
-		self.score = 0
-
 #The class holding the whole game
 class Game:
 	def __init__(self, tileFilePath, mapFilePath, defaultStackPath):
 		self.scene = logic.getCurrentScene()
 
 		self.currentTile = Tile("") # The name of the upper tile in the stack
-		self.tileObj = logic.getCurrentScene().objects["tile"]
-		self.possiblePos = [] # Store the possible position that the currentTile can take
-		self.possiblePosFlags = []
+		self.currentTileObj = logic.getCurrentScene().objects["tile"]
 
-		self.abbeyList = []
+		self.players = [] # Store the players, filled by loadMapFromFile
+		self.tileStack = [] # Store the tile Stack
+		self.abbeyList = [] # The list of abbey positions
+		self.possiblePos = [] # Store the possible position that the currentTile can take
+		self.possiblePosFlags = [] # Store the objects added to show possiblePos
+		self.pawnObj = dict() # The list of pawns
+
+		self.tiles = dict() # Store the different possible tiles
+		self.map = dict() #Contain the whole map, a this: self.map[Position([0,1])] = []
 
 		self.pawnPut = False # If the pawn is already put in this turn
 		self.tilePut = True # If the tile is already put this turn
 
-		self.pawnObj = dict()
-		self.players = [] # Store the players, filled by loadMapFromFile
 		self.loadTilesFromFile(tileFilePath) # Load the tiles caracteristics
-		self.tileStack = [] # Store the tile Stack
 		self.loadMapFromFile(mapFilePath, defaultStackPath) # Load a save
 
-		self.nextTurn()
+		self.nextTurn() # Let the show begin
 
 	def loadTilesFromFile(self, filePath):
 		self.tiles = dict()
@@ -48,24 +42,24 @@ class Game:
 		fileTable = fileContent.split("\n")
 
 		first = True
-		tileID = str()
+		tileID = ""
 		elements = dict()
-		for element in fileTable:
-			if element == ';':
+		for line in fileTable:
+			if line == ';':
 				self.tiles[tileID] = Tile(tileID, elements)
 				first = True
-				elements = {}
+				elements = dict()
 				continue
 
 			if first == True:
-				tileID = element
+				tileID = line
 				first = False
 			else:
-				words = element.split(' ')
+				words = line.split(' ')
 				name = words[0]
 				del words[0]
 				#A tile element is defined as this:
-				#example: self.elements = ['',[0,1]]
+				#example: elements["tile.001"] = [[0,1]]
 				if len(words) == 0:
 					elements[name] = []
 				else:
@@ -79,65 +73,45 @@ class Game:
 		fileContent = configFile.read()
 		fileTable = fileContent.split("\n")
 
-		step = 0
 		self.currentPlayer = int(fileTable[0])
 		del fileTable[0]
-		for cptr,i in enumerate(fileTable):
-			if i == '':
+
+		step = 0
+		for cptr,line in enumerate(fileTable):
+			if line == '':
 				continue
-			if i == ';':
+			if line == ';':
 				step+=1
 				continue
 
-			elements = i.split(' ')
+			words = line.split(' ')
+			#First step, setup the players:
 			if step == 0:
-				player = Player(elements[0])
-				player.nbPawns = int(elements[1])
-				player.nbGreatPawn = int(elements[2])
-				player.score = int(elements[3])
+				player = Player(words[0])
+				player.nbPawns = int(words[1])
+				player.nbGreatPawn = int(words[2])
+				player.score = int(words[3])
 				self.players.append(player)
+			#Second step, setup the map
 			elif step == 1:
-				position = elements[0].split(',')
-				tileID = elements[1]
-				tile = copy.deepcopy(self.tiles[tileID])
-				tile.rotation = int(elements[2])
-				tile.position = Position(position)
-				if tile.ID == "tile.019" or tile.ID == "tile.020":
-					self.abbeyList.append(tile.position)
+				position = Position(words[0].split(','))
+				tile = self.addTile(words[1], position, int(words[2]))
+
 				for v in range(0,3):
-					del elements[0]
+					del words[0]
 
-				pawnTab = []
-				for j in elements:
+				for j in words:
 					pawnCarac = j.split(':')
-					tile.addPawn(pawnCarac[0], pawnCarac[1])
-
-				#import pdb; pdb.set_trace()
-				for pawn in tile.pawns:
-					pawnObj = self.scene.addObject("pawn.00"+str(int(pawn.player)+1))
-					if tile.elements[pawn.element] == []:
-						sideVect = [0,0]
-					else:
-						sideVect = self.convertSideToVector(loopInt(tile.elements[pawn.element][0]+tile.rotation, 3))
-
-					pawnObj.position[0] = int(position[0]) + sideVect[0]*.30
-					pawnObj.position[1] = int(position[1]) + sideVect[1]*.30
-					self.pawnObj[tile.position] = [pawnObj, pawn.element]
-
-
-				scene = logic.getCurrentScene()
-				newTileObj = scene.addObject(tileID)
-
-				newTile = [tileID,tile,newTileObj]
-
-				self.map[Position(position)] = newTile
+					self.addPawn(position, pawnCarac[1], int(pawnCarac[0]))
+			#Third step, setup the tile stack:
 			else:
-				self.tileStack = list(elements)
+				self.tileStack = list(words)
 				break
+
 		if self.tileStack[0] == "none":
 			defaultStackFile = open(defaultStackPath, "r")
 			fileContent = defaultStackFile.read()
-			fileTab = fileContent.split(' ')
+			fileTab = fileContent.split('\n')[0].split(' ')
 			random.shuffle(fileTab)
 			self.tileStack = fileTab
 
@@ -150,14 +124,14 @@ class Game:
 			configFile.write(" ".join([player.name,str(player.nbPawns),str(player.nbBigPawns), str(player.score)])+"\n")
 		configFile.write(";\n")
 
-		for cle in self.map:
-			tile = self.map[cle]
+		for key in self.map:
+			tile = self.map[key]
 			pawnsString = " "
 
 			for pawn in tile[1].pawns:
 				pawnsString += str(pawn.player)+":"+pawn.element+" "
 			pawnsString = pawnsString[:-1]
-			configFile.write(str(cle.x)+","+str(cle.y)+" "+tile[0]+" "+str(tile[1].rotation)+pawnsString+"\n")
+			configFile.write(str(key.x)+","+str(key.y)+" "+tile[0].ID+" "+str(tile[0].rotation)+pawnsString+"\n")
 		configFile.write(";\n")
 
 		for cptr,tileID in enumerate(self.tileStack):
@@ -166,21 +140,22 @@ class Game:
 				configFile.write(" ")
 		configFile.close()
 
-	def updateTiles(self, tilePos):
+	def updateCurrentTileView(self, tilePos):
 		if self.tilePut == False:
-			self.tileObj.position[0] = tilePos.x
-			self.tileObj.position[1] = tilePos.y
-			a = self.tileObj.orientation.to_euler()
+			self.currentTileObj.position[0] = tilePos.x
+			self.currentTileObj.position[1] = tilePos.y
+			a = self.currentTileObj.orientation.to_euler()
 			a.z = self.currentTile.rotation * math.pi/2
-			self.tileObj.orientation = a.to_matrix()
+			self.currentTileObj.orientation = a.to_matrix()
 			self.currentTile.position = tilePos
 
+	def updateTiles(self):
 		for key in self.map:
-			self.map[key][2].position[0] = key.x
-			self.map[key][2].position[1] = key.y
-			a = self.map[key][2].orientation.to_euler()
-			a.z = self.map[key][1].rotation * math.pi/2
-			self.map[key][2].orientation = a.to_matrix()
+			self.map[key][1].position[0] = key.x
+			self.map[key][1].position[1] = key.y
+			a = self.map[key][1].orientation.to_euler()
+			a.z = self.map[key][0].rotation * math.pi/2
+			self.map[key][1].orientation = a.to_matrix()
 
 	def convertSideToVector(self, side):
 		sideVect = []
@@ -205,44 +180,50 @@ class Game:
 		self.pawnPut = False
 		self.tilePut = False
 
-		self.currentPlayer = loopInt(self.currentPlayer+1, len(self.players)-1)
-
+		self.currentPlayer = int(loopInt(self.currentPlayer+1, len(self.players)-1))
 		self.player = self.players[self.currentPlayer]
 		print("New Turn: player="+self.player.name)
+
 		self.currentTile = copy.deepcopy(self.tiles[self.tileStack[0]])
-		self.tileObj = self.scene.addObject(self.tileStack[0])
+		self.currentTileObj = self.scene.addObject(self.tileStack[0])
+
 		self.findPossiblePos() #Refresh possibles tiles positions
 		self.showPossiblePos()
+		self.updateTiles()
 		return True
 
 	def addTile(self, tileID, position, rotation):
-		scene = logic.getCurrentScene()
-		if self.currentTile.ID == "tile.019" or self.currentTile.ID == "tile.020":
+		if tileID == "tile.019" or tileID == "tile.020":
 			self.abbeyList.append(position)
+
 		newTile = copy.deepcopy(self.tiles[tileID])
 		newTile.rotation = rotation
 		newTile.position = position
+
 		tileObj = self.scene.addObject(tileID)
 		tileObj.position[0] = position.x
 		tileObj.position[1] = position.y
 		a = tileObj.orientation.to_euler()
 		a.z = self.currentTile.rotation * math.pi/2
 		tileObj.orientation = a.to_matrix()
-		self.map[position] = [tileID, newTile, tileObj]
+
+		self.map[position] = [newTile, tileObj]
 
 	def putTile(self, position):
-		if self.tilePut: #or (position in self.possiblePos) == False:
+		if self.tilePut:
 			return False
+		# Testing if the rotation and the position of the tile is correct
 		possiblePos = False
-
-		for i in self.possiblePos:
-			if position == i[0]:
+		for pos in self.possiblePos:
+			if position == pos[0]:
 				possiblePos = True
-				if not (self.currentTile.rotation in i[1]):
+				if not self.currentTile.rotation in pos[1]:
 					return False
 		if not possiblePos:
 			return False
+
 		self.hidePossiblePos()
+
 		print("Putting tile")
 		self.addTile(self.currentTile.ID, position, self.currentTile.rotation)
 		del self.tileStack[0]
@@ -250,11 +231,30 @@ class Game:
 
 		return True
 
+	def addPawn(self, position, elementID, player):
+		tile = self.map[position][0]
+		tile.addPawn(player, elementID)
+		#import pdb; pdb.set_trace()
+		pawnObj = self.scene.addObject("pawn.00"+str(player+1))
+		self.pawnObj[position] = [pawnObj, elementID]
 
-	def putPawn(self, elementID, realPawnSide):
+		side = 4
+		if tile.elements[elementID]:
+			side = loopInt(tile.elements[elementID][0]+tile.rotation, 3)
+
+		#converting side:
+		sideVect = self.convertSideToVector(side)
+
+		pawnObj.position[0] = self.currentTile.position.x + sideVect[0]*.30
+		pawnObj.position[1] = self.currentTile.position.y + sideVect[1]*.30
+
+		self.pawnPut = True
+		return True
+
+	def putPawn(self, elementID):
 		if self.pawnPut or self.player.nbPawns == 0:
 			return False
-		#import pdb; pdb.set_trace()
+
 		genericElement = elementID.split('_')[0]
 		if elementID != "field":
 			# This is the stack of the tiles that have to be dealed with
@@ -275,10 +275,10 @@ class Game:
 							continue
 						if pos in tileArchiveStack:
 							continue
-						newTile = self.map[pos][1]
+						newTile = self.map[pos][0]
 						opposedSide = loopInt(side+2, 3)
 						possibleSides = []
-						#import pdb; pdb.set_trace()
+
 						for e in newTile.elements:
 							boule = False
 							if e.split('_')[0] == genericElement:
@@ -309,30 +309,19 @@ class Game:
 							break
 					if not existAlready:
 						currentTileStack.append(i)
-			#import pdb; pdb.set_trace()
+
 			for tilePos in tileArchiveStack:
-				for pawn in self.map[tilePos][1].pawns:
+				for pawn in self.map[tilePos][0].pawns:
 					if pawn.element == elementID:
 						return False
 
-
-		self.map[self.currentTile.position][1].addPawn(self.currentPlayer, elementID)
-		pawnObj = self.scene.addObject("pawn.00"+str(self.currentPlayer+1))
-		self.pawnObj[self.currentTile.position] = [pawnObj, elementID]
-
-		#converting side:
-		sideVect = self.convertSideToVector(realPawnSide)
-
-		pawnObj.position[0] = self.currentTile.position.x + sideVect[0]*.30
-		pawnObj.position[1] = self.currentTile.position.y + sideVect[1]*.30
+		self.addPawn(self.currentTile.position, elementID, self.currentPlayer)
 		self.player.nbPawns -= 1
 
 		self.pawnPut = True
 		return True
 
 	def countPoints(self):
-		#import pdb; pdb.set_trace()
-
 		for element in self.currentTile.elements:
 			genericElement = element.split('_')[0]
 			if genericElement == "field" or genericElement == "abbey":
@@ -356,7 +345,7 @@ class Game:
 							break
 						if pos in tileArchiveStack:
 							continue
-						newTile = self.map[pos][1]
+						newTile = self.map[pos][0]
 						opposedSide = loopInt(side+2, 3)
 						possibleSides = []
 						#import pdb; pdb.set_trace()
@@ -398,7 +387,7 @@ class Game:
 			#import pdb; pdb.set_trace()
 			playersPoints = [0,0,0,0,0,0]
 			for tilePos in tileArchiveStack:
-				for cp,pawn in enumerate(self.map[tilePos][1].pawns):
+				for cp,pawn in enumerate(self.map[tilePos][0].pawns):
 					if pawn.element.split('_')[0] == genericElement:
 						playersPoints[int(pawn.player)] += 1
 						self.players[pawn.player].nbPawns += 1
@@ -407,7 +396,7 @@ class Game:
 							if pawnObj[1] == element:
 								pawnObj[0].endObject()
 								del self.pawnObj[tilePos]
-						del self.map[tilePos][1].pawns[cp]
+						del self.map[tilePos][0].pawns[cp]
 						break
 
 			if playersPoints == [0,0,0,0,0,0]:
@@ -434,7 +423,7 @@ class Game:
 								pObj = self.pawnObj[abbeyPos]
 								if pObj[1] == "abbey":
 									pObj[0].endObject()
-									del self.map[abbeyPos][1].pawns[cp]
+									del self.map[abbeyPos][0].pawns[cp]
 								self.players[cptr].score += 9
 
 		for player in self.players:
@@ -469,13 +458,13 @@ class Game:
 				# Get, for each side of the possible position, the list of compatible rotations
 				possibilities = []
 				if Position([i[0].x, i[0].y+1]) in self.map:
-					possibilities.append(self.currentTile.isCompatibleWith(0, self.map[Position([i[0].x, i[0].y+1])][1]))
+					possibilities.append(self.currentTile.isCompatibleWith(0, self.map[Position([i[0].x, i[0].y+1])][0]))
 				if Position([i[0].x+1, i[0].y]) in self.map:
-					possibilities.append(self.currentTile.isCompatibleWith(3, self.map[Position([i[0].x+1, i[0].y])][1]))
+					possibilities.append(self.currentTile.isCompatibleWith(3, self.map[Position([i[0].x+1, i[0].y])][0]))
 				if Position([i[0].x, i[0].y-1]) in self.map:
-					possibilities.append(self.currentTile.isCompatibleWith(2, self.map[Position([i[0].x, i[0].y-1])][1]))
+					possibilities.append(self.currentTile.isCompatibleWith(2, self.map[Position([i[0].x, i[0].y-1])][0]))
 				if Position([i[0].x-1, i[0].y]) in self.map:
-					possibilities.append(self.currentTile.isCompatibleWith(1, self.map[Position([i[0].x-1, i[0].y])][1]))
+					possibilities.append(self.currentTile.isCompatibleWith(1, self.map[Position([i[0].x-1, i[0].y])][0]))
 				# Test if a rotation is common to all side:
 				nbBadSide = 0
 				for side in range(0,4):
