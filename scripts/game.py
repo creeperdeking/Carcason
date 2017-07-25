@@ -427,7 +427,7 @@ class Game:
 		for ptrcp,abbeyPos in enumerate(self.abbeyList):
 			if Position([abbeyPos.x, abbeyPos.y+1]) in self.map and Position([abbeyPos.x+1, abbeyPos.y+1]) in self.map and Position([abbeyPos.x+1, abbeyPos.y]) in self.map and Position([abbeyPos.x+1, abbeyPos.y-1]) in self.map and Position([abbeyPos.x, abbeyPos.y-1]) in self.map and Position([abbeyPos.x-1, abbeyPos.y-1]) in self.map and Position([abbeyPos.x-1, abbeyPos.y]) in self.map and Position([abbeyPos.x-1, abbeyPos.y-1]) in self.map:
 				for cp,pawn in enumerate(self.map[abbeyPos][1].pawns):
-					import pdb; pdb.set_trace()
+					#import pdb; pdb.set_trace()
 					if pawn.element == "abbey":
 						for cptr in range(0, len(self.players)):
 							if pawn.player == cptr:
