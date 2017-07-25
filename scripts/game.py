@@ -255,6 +255,7 @@ class Game:
 	def ridePath(self, element):
 		isOpen = False
 		genericElement = element.split('_')[0]
+		pdb.set_trace()
 		# This is the stack of the tiles that have to be dealed with
 		currentTileStack = [ [self.currentTile, self.currentTile.elements[element]] ]
 		#This is the old tiles already done:
@@ -283,7 +284,7 @@ class Game:
 						if e.split('_')[0] == genericElement:
 							for a in newTile.elements[e]:
 								if loopInt(a+newTile.rotation, 3) == opposedSide:
-									possibleSides = newTile.elements[e]
+									possibleSides = copy.copy(newTile.elements[e])
 									boule = True
 									break
 							if boule:
@@ -317,11 +318,13 @@ class Game:
 		if self.pawnPut or self.player.nbPawns == 0:
 			return False
 
+		tileArchiveStack = self.ridePath(elementID)[0]
+
 		genericElement = elementID.split('_')[0]
 		if elementID != "field":
-			for tilePos in self.ridePath(elementID)[0]:
+			for tilePos in tileArchiveStack:
 				for pawn in self.map[tilePos][0].pawns:
-					if pawn.element == elementID:
+					if pawn.element.split('_')[0] == genericElement:
 						return False
 
 		self.addPawn(self.currentTile.position, elementID, self.currentPlayer)
