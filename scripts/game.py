@@ -255,7 +255,7 @@ class Game:
 	def ridePath(self, element):
 		isOpen = False
 		genericElement = element.split('_')[0]
-		pdb.set_trace()
+		
 		# This is the stack of the tiles that have to be dealed with
 		currentTileStack = [ [self.currentTile, self.currentTile.elements[element]] ]
 		#This is the old tiles already done:
