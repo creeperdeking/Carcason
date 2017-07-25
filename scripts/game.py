@@ -32,6 +32,7 @@ class Game:
 
 		self.loadTilesFromFile(tileFilePath) # Load the tiles caracteristics
 		self.loadMapFromFile(mapFilePath, defaultStackPath) # Load a save
+		self.updateTiles()
 
 		self.nextTurn() # Let the show begin
 
@@ -177,18 +178,22 @@ class Game:
 			return False
 		if self.tilePut == False:
 			return True
-
 		self.pawnPut = False
 		self.tilePut = False
 
 		self.currentPlayer = int(loopInt(self.currentPlayer+1, len(self.players)-1))
 		self.player = self.players[self.currentPlayer]
-		print("New Turn: player="+self.player.name)
+		print("\n New Turn: player="+self.player.name)
 
-		self.currentTile = copy.deepcopy(self.tiles[self.tileStack[0]])
+		while 2+2 != 5:
+			self.currentTile = copy.deepcopy(self.tiles[self.tileStack[0]])
+
+			if not self.findPossiblePos(): #Refresh possibles tiles positions
+				self.tileStack.append(self.tileStack[0])
+				del self.tileStack[0]
+			else:
+				break
 		self.currentTileObj = self.scene.addObject(self.tileStack[0])
-
-		self.findPossiblePos() #Refresh possibles tiles positions
 		self.showPossiblePos()
 		self.updateTiles()
 		return True
@@ -255,7 +260,7 @@ class Game:
 	def ridePath(self, element):
 		isOpen = False
 		genericElement = element.split('_')[0]
-		
+
 		# This is the stack of the tiles that have to be dealed with
 		currentTileStack = [ [self.currentTile, self.currentTile.elements[element]] ]
 		#This is the old tiles already done:
@@ -349,11 +354,12 @@ class Game:
 			for tilePos in tileArchiveStack:
 				for cp,pawn in enumerate(self.map[tilePos][0].pawns):
 					if pawn.element.split('_')[0] == genericElement:
+						print("Rendre pion "+self.players[pawn.player].name)
 						playersPoints[int(pawn.player)] += 1
 						self.players[pawn.player].nbPawns += 1
 						if tilePos in self.pawnObj:
 							pawnObj = self.pawnObj[tilePos]
-							if pawnObj[1] == element:
+							if pawnObj[1] == genericElement:
 								pawnObj[0].endObject()
 								del self.pawnObj[tilePos]
 						del self.map[tilePos][0].pawns[cp]
@@ -441,6 +447,9 @@ class Game:
 			badPos = sorted(badPos)
 			for i in range(0,len(badPos)):
 				del self.possiblePos[badPos[len(badPos)-1-i]]
+		if not self.possiblePos:
+			return False
+		return True
 
 	def showPossiblePos(self):
 		self.hidePossiblePos()
