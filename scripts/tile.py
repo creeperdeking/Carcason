@@ -25,10 +25,10 @@ class Pawn:
 		self.element = element
 
 class Element:
-	def __init__(self, name="", sides=[]):
+	def __init__(self, name="", sides=[], value=1):
 		self.name = name
 		self.sides = sides
-		self.value = 2
+		self.value = value
 
 class Tile:
 	def __init__(self, ID, elements=list()):

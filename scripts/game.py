@@ -65,7 +65,7 @@ class Game:
 				if len(words) == 0:
 					elements.append(Element(name, []))
 				else:
-					elements.append(Element(name,list(map(int, words[0].split(',')))))
+					elements.append(Element(name,list(map(int, words[1].split(','))), int(words[0])))
 		configFile.close()
 
 	def loadMapFromFile(self, filePath, defaultStackPath):
@@ -270,6 +270,7 @@ class Game:
 		currentTileStack = [ [self.currentTile, copy.deepcopy(element.sides)] ]
 		#This is the old tiles already done:
 		tileArchiveStack = []
+		elementsArchive = [element]
 
 		while currentTileStack:
 			#pdb.set_trace()
@@ -296,6 +297,7 @@ class Game:
 							for eSide in e.sides:
 								if loopInt(eSide+newTile.rotation, 3) == opposedSide:
 									possibleSides = copy.deepcopy(e.sides)
+									elementsArchive.append(e)
 									boule = True
 									break
 							if boule:
@@ -323,7 +325,7 @@ class Game:
 				if not existAlready:
 					currentTileStack.append(i)
 
-		return [tileArchiveStack, isOpen]
+		return [tileArchiveStack, isOpen, elementsArchive]
 
 	def putPawn(self, element):
 		if self.pawnPut or self.player.nbPawns == 0:
@@ -380,9 +382,12 @@ class Game:
 					oldPlayerPoints = i
 				elif i == oldPlayerPoints:
 					playerWinner.append(cptr)
+			nbPoints = 0
+			for result in ridePathResult[2]:
+				nbPoints += result.value
 
 			for player in playerWinner:
-				self.players[player].score += len(tileArchiveStack)*2
+				self.players[player].score += nbPoints
 
 		for ptrcp,abbeyPos in enumerate(self.abbeyList):
 			if Position([abbeyPos.x, abbeyPos.y+1]) in self.map and Position([abbeyPos.x+1, abbeyPos.y+1]) in self.map and Position([abbeyPos.x+1, abbeyPos.y]) in self.map and Position([abbeyPos.x+1, abbeyPos.y-1]) in self.map and Position([abbeyPos.x, abbeyPos.y-1]) in self.map and Position([abbeyPos.x-1, abbeyPos.y-1]) in self.map and Position([abbeyPos.x-1, abbeyPos.y]) in self.map and Position([abbeyPos.x-1, abbeyPos.y-1]) in self.map:
