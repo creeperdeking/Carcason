@@ -20,9 +20,11 @@ class Position:
 		return (self.x, self.y) == (other.x, other.y)
 
 class Pawn:
-	def __init__(self, player, element):
+	def __init__(self, player, element, value=1):
 		self.player = int(player)
 		self.element = element
+
+		self.value = value
 
 class Element:
 	def __init__(self, name="", sides=[], value=1):
@@ -40,8 +42,8 @@ class Tile:
 
 		self.pawns = []
 
-	def addPawn(self, player, element):
-		self.pawns.append(Pawn(player, element))
+	def addPawn(self, player, element, value):
+		self.pawns.append(Pawn(player, element, value))
 
 	def getElement(self, name, side):
 		for element in self.elements:

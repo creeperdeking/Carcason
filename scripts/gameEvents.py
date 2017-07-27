@@ -77,9 +77,15 @@ class GameEvents:
 					sides = element.sides
 					if side == 4:
 						if not sides:
-							self.game.putPawn(element)
+							if isActivatedK(events.RIGHTSHIFTKEY):
+								self.game.putPawn(element,2)
+							else:
+								self.game.putPawn(element,1)
 					elif side in sides:
-						self.game.putPawn(element)
+						if isActivatedK(events.RIGHTSHIFTKEY):
+							self.game.putPawn(element,2)
+						else:
+							self.game.putPawn(element,1)
 
 		if isActivatedK(events.ZKEY):
 			self.camTracer.applyMovement((0, .15, 0), True)

@@ -106,7 +106,7 @@ class Game:
 					pawnCarac = j.split(':')
 					element = tile.getElement(pawnCarac[1], int(pawnCarac[2]))
 
-					self.addPawn(position, element, int(pawnCarac[0]))
+					self.addPawn(position, element, int(pawnCarac[3]), int(pawnCarac[0]))
 			#Third step, setup the tile stack:
 			else:
 				self.tileStack = list(words)
@@ -136,7 +136,7 @@ class Game:
 				sidee = 4
 				if pawn.element.sides:
 					side = pawn.element.sides[0]
-				pawnsString += str(pawn.player)+":"+pawn.element.name+":"+str(sidee)+" "
+				pawnsString += str(pawn.player)+":"+pawn.element.name+":"+str(sidee)+":"+str(pawn.value)+" "
 			pawnsString = pawnsString[:-1]
 			configFile.write(str(key.x)+","+str(key.y)+" "+tile[0].ID+" "+str(tile[0].rotation)+pawnsString+"\n")
 		configFile.write(";\n")
@@ -243,11 +243,15 @@ class Game:
 
 		return True
 
-	def addPawn(self, position, element, player):
+	def addPawn(self, position, element, value, player):
 		tile = self.map[position][0]
-		tile.addPawn(player, element)
+		tile.addPawn(player, element, value)
 
-		pawnObj = self.scene.addObject("pawn.00"+str(player+1))
+		pawnObj = 0
+		if value == 2:
+			pawnObj = self.scene.addObject("bigPawn.00"+str(player+1))
+		else:
+			pawnObj = self.scene.addObject("pawn.00"+str(player+1))
 		self.pawnObj[position] = [pawnObj, element]
 
 		side = 4
@@ -327,8 +331,8 @@ class Game:
 
 		return [tileArchiveStack, isOpen, elementsArchive]
 
-	def putPawn(self, element):
-		if self.pawnPut or self.player.nbPawns == 0:
+	def putPawn(self, element, value):
+		if self.pawnPut or value == 1 and self.player.nbPawns == 0 or value == 2 and self.player.nbBigPawns == 0:
 			return False
 
 		tileArchiveStack = self.ridePath(element)[0]
@@ -339,8 +343,11 @@ class Game:
 					if pawn.element.name == element.name:
 						return False
 
-		self.addPawn(self.currentTile.position, element, self.currentPlayer)
-		self.player.nbPawns -= 1
+		self.addPawn(self.currentTile.position, element, value, self.currentPlayer)
+		if value == 2:
+			self.player.nbBigPawns -= 1
+		else:
+			self.player.nbPawns -= 1
 
 		self.pawnPut = True
 		return True
@@ -361,7 +368,7 @@ class Game:
 			for tilePos in tileArchiveStack:
 				for cp,pawn in enumerate(self.map[tilePos][0].pawns):
 					if pawn.element.name == element.name:
-						playersPoints[int(pawn.player)] += 1
+						playersPoints[int(pawn.player)] += pawn.value
 						self.players[pawn.player].nbPawns += 1
 						if tilePos in self.pawnObj:
 							pawnObj = self.pawnObj[tilePos]
