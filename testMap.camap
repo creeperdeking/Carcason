@@ -1,22 +1,17 @@
 0
-Alexis 5 1 16
-Tristan 5 1 12
+Alexis 3 1 62
+Tristan 5 1 28
 ;
-0,1 tile.014 2 0:city
--1,1 tile.008 1 0:city
-0,0 tile.018 0
--1,0 tile.015 0 1:road
-2,0 tile.021 0
--1,-1 tile.018 1
--2,-1 tile.003 0
--2,1 tile.006 0
--3,0 tile.009 3
--3,1 tile.010 2
-2,-1 tile.024 3
--1,-2 tile.017 1
-0,-1 tile.019 0
-1,0 tile.023 1 1:road
-1,1 tile.019 0
--2,0 tile.012 2
+0,1 tile.024 1
+2,-2 tile.001 0
+0,0 tile.023 0
+2,-1 tile.008 2
+0,-1 tile.023 0 0:road:4
+1,0 tile.019 0 0:abbey:4
+3,1 tile.021 0
+1,-1 tile.014 2
+0,2 tile.007 0
+2,1 tile.024 1
+1,1 tile.024 3
 ;
-tile.011 tile.024 tile.023 tile.004 tile.022 tile.002 tile.009 tile.008 tile.007 tile.024 tile.016 tile.001 tile.023 tile.022 tile.023 tile.022 tile.020 tile.010 tile.013 tile.010 tile.023 tile.008 tile.024 tile.016 tile.019 tile.014 tile.015 tile.011 tile.013 tile.002 tile.012 tile.013 tile.016 tile.015 tile.020 tile.024 tile.007 tile.024 tile.014 tile.002 tile.022 tile.023 tile.017 tile.023 tile.024
+tile.024 tile.018 tile.020 tile.020 tile.024 tile.014 tile.005 tile.014 tile.024 tile.019 tile.014 tile.022 tile.003 tile.016 tile.022 tile.002 tile.022 tile.015 tile.023 tile.024 tile.005 tile.007 tile.024 tile.002 tile.010 tile.018 tile.023 tile.009 tile.010 tile.017 tile.014 tile.018 tile.023 tile.002 tile.015 tile.023 tile.017 tile.006 tile.009 tile.015 tile.022 tile.016 tile.004 tile.008 tile.019 tile.017 tile.023 tile.019 tile.008 tile.023 tile.010 tile.011 tile.016 tile.024

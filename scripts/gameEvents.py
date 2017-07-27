@@ -74,7 +74,7 @@ class GameEvents:
 					side = loopInt(side-self.game.currentTile.rotation, 3)
 
 				for element in self.game.currentTile.elements:
-					sides = self.game.currentTile.elements[element]
+					sides = element.sides
 					if side == 4:
 						if not sides:
 							self.game.putPawn(element)

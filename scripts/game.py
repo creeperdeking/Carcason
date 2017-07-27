@@ -45,12 +45,12 @@ class Game:
 
 		first = True
 		tileID = ""
-		elements = dict()
+		elements = []
 		for line in fileTable:
 			if line == ';':
 				self.tiles[tileID] = Tile(tileID, elements)
 				first = True
-				elements = dict()
+				elements = []
 				continue
 
 			if first == True:
@@ -63,9 +63,9 @@ class Game:
 				#A tile element is defined as this:
 				#example: elements["tile.001"] = [[0,1]]
 				if len(words) == 0:
-					elements[name] = []
+					elements.append(Element(name, []))
 				else:
-					elements[name] = list(map(int, words[0].split(',')))
+					elements.append(Element(name,list(map(int, words[0].split(',')))))
 		configFile.close()
 
 	def loadMapFromFile(self, filePath, defaultStackPath):
@@ -104,7 +104,9 @@ class Game:
 
 				for j in words:
 					pawnCarac = j.split(':')
-					self.addPawn(position, pawnCarac[1], int(pawnCarac[0]))
+					element = tile.getElement(pawnCarac[1], int(pawnCarac[2]))
+
+					self.addPawn(position, element, int(pawnCarac[0]))
 			#Third step, setup the tile stack:
 			else:
 				self.tileStack = list(words)
@@ -131,7 +133,10 @@ class Game:
 			pawnsString = " "
 
 			for pawn in tile[0].pawns:
-				pawnsString += str(pawn.player)+":"+pawn.element+" "
+				sidee = 4
+				if pawn.element.sides:
+					side = pawn.element.sides[0]
+				pawnsString += str(pawn.player)+":"+pawn.element.name+":"+str(sidee)+" "
 			pawnsString = pawnsString[:-1]
 			configFile.write(str(key.x)+","+str(key.y)+" "+tile[0].ID+" "+str(tile[0].rotation)+pawnsString+"\n")
 		configFile.write(";\n")
@@ -214,6 +219,7 @@ class Game:
 		tileObj.orientation = a.to_matrix()
 
 		self.map[position] = [newTile, tileObj]
+		return newTile
 
 	def putTile(self, position):
 		if self.tilePut:
@@ -237,16 +243,16 @@ class Game:
 
 		return True
 
-	def addPawn(self, position, elementID, player):
+	def addPawn(self, position, element, player):
 		tile = self.map[position][0]
-		tile.addPawn(player, elementID)
-		#import pdb; pdb.set_trace()
+		tile.addPawn(player, element)
+
 		pawnObj = self.scene.addObject("pawn.00"+str(player+1))
-		self.pawnObj[position] = [pawnObj, elementID]
+		self.pawnObj[position] = [pawnObj, element]
 
 		side = 4
-		if tile.elements[elementID]:
-			side = loopInt(tile.elements[elementID][0]+tile.rotation, 3)
+		if element.sides:
+			side = loopInt(element.sides[0]+tile.rotation, 3)
 
 		#converting side:
 		sideVect = self.convertSideToVector(side)
@@ -259,14 +265,14 @@ class Game:
 
 	def ridePath(self, element):
 		isOpen = False
-		genericElement = element.split('_')[0]
 
 		# This is the stack of the tiles that have to be dealed with
-		currentTileStack = [ [self.currentTile, self.currentTile.elements[element]] ]
+		currentTileStack = [ [self.currentTile, copy.deepcopy(element.sides)] ]
 		#This is the old tiles already done:
 		tileArchiveStack = []
 
 		while currentTileStack:
+			#pdb.set_trace()
 			futureTileStack = []
 			removeStack = []
 			for cpt,tile in enumerate(currentTileStack):
@@ -286,10 +292,10 @@ class Game:
 
 					for e in newTile.elements:
 						boule = False
-						if e.split('_')[0] == genericElement:
-							for a in newTile.elements[e]:
-								if loopInt(a+newTile.rotation, 3) == opposedSide:
-									possibleSides = copy.copy(newTile.elements[e])
+						if e.name == element.name:
+							for eSide in e.sides:
+								if loopInt(eSide+newTile.rotation, 3) == opposedSide:
+									possibleSides = copy.deepcopy(e.sides)
 									boule = True
 									break
 							if boule:
@@ -319,20 +325,19 @@ class Game:
 
 		return [tileArchiveStack, isOpen]
 
-	def putPawn(self, elementID):
+	def putPawn(self, element):
 		if self.pawnPut or self.player.nbPawns == 0:
 			return False
 
-		tileArchiveStack = self.ridePath(elementID)[0]
+		tileArchiveStack = self.ridePath(element)[0]
 
-		genericElement = elementID.split('_')[0]
-		if elementID != "field":
+		if element.name != "field":
 			for tilePos in tileArchiveStack:
 				for pawn in self.map[tilePos][0].pawns:
-					if pawn.element.split('_')[0] == genericElement:
+					if pawn.element.name == element.name:
 						return False
 
-		self.addPawn(self.currentTile.position, elementID, self.currentPlayer)
+		self.addPawn(self.currentTile.position, element, self.currentPlayer)
 		self.player.nbPawns -= 1
 
 		self.pawnPut = True
@@ -340,26 +345,25 @@ class Game:
 
 	def countPoints(self):
 		for element in self.currentTile.elements:
-			genericElement = element.split('_')[0]
-			if genericElement == "field" or genericElement == "abbey":
+			if element.name == "field" or element.name == "abbey":
 				continue
 
 			ridePathResult = self.ridePath(element)
 			tileArchiveStack = ridePathResult[0]
 			isOpen = ridePathResult[1]
+
 			if isOpen:
 				continue
 
 			playersPoints = [0,0,0,0,0,0]
 			for tilePos in tileArchiveStack:
 				for cp,pawn in enumerate(self.map[tilePos][0].pawns):
-					if pawn.element.split('_')[0] == genericElement:
-						print("Rendre pion "+self.players[pawn.player].name)
+					if pawn.element.name == element.name:
 						playersPoints[int(pawn.player)] += 1
 						self.players[pawn.player].nbPawns += 1
 						if tilePos in self.pawnObj:
 							pawnObj = self.pawnObj[tilePos]
-							if pawnObj[1] == genericElement:
+							if pawnObj[1].name == element.name:
 								pawnObj[0].endObject()
 								del self.pawnObj[tilePos]
 						del self.map[tilePos][0].pawns[cp]
@@ -383,14 +387,15 @@ class Game:
 		for ptrcp,abbeyPos in enumerate(self.abbeyList):
 			if Position([abbeyPos.x, abbeyPos.y+1]) in self.map and Position([abbeyPos.x+1, abbeyPos.y+1]) in self.map and Position([abbeyPos.x+1, abbeyPos.y]) in self.map and Position([abbeyPos.x+1, abbeyPos.y-1]) in self.map and Position([abbeyPos.x, abbeyPos.y-1]) in self.map and Position([abbeyPos.x-1, abbeyPos.y-1]) in self.map and Position([abbeyPos.x-1, abbeyPos.y]) in self.map and Position([abbeyPos.x-1, abbeyPos.y-1]) in self.map:
 				for cp,pawn in enumerate(self.map[abbeyPos][0].pawns):
-					if pawn.element == "abbey":
+					if pawn.element.name == "abbey":
 						for cptr in range(0, len(self.players)):
 							if pawn.player == cptr:
 								pObj = self.pawnObj[abbeyPos]
-								if pObj[1] == "abbey":
+								if pObj[1].name == "abbey":
 									pObj[0].endObject()
 									del self.map[abbeyPos][0].pawns[cp]
 								self.players[cptr].score += 9
+								self.players[cptr].nbPawns += 1
 
 	def rotateTile(self):
 		self.currentTile.rotate()

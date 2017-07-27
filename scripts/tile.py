@@ -1,3 +1,5 @@
+import pdb
+
 def loopInt(integrer, maxValue):
 	if integrer > maxValue:
 		return integrer - maxValue-1
@@ -22,8 +24,14 @@ class Pawn:
 		self.player = int(player)
 		self.element = element
 
+class Element:
+	def __init__(self, name="", sides=[]):
+		self.name = name
+		self.sides = sides
+		self.value = 2
+
 class Tile:
-	def __init__(self, ID, elements=dict()):
+	def __init__(self, ID, elements=list()):
 		self.ID = ID
 		self.rotation = 0
 
@@ -35,40 +43,37 @@ class Tile:
 	def addPawn(self, player, element):
 		self.pawns.append(Pawn(player, element))
 
-	def existElement(self, name, side):
-		found = False
-		genericName = name.split('_')[0]
-		elementName = []
+	def getElement(self, name, side):
 		for element in self.elements:
-			if element.split('_')[0] == genericName:
-				found = True
-				elementName.append(element)
+			if element.name == name:
+				if side == 4 or loopInt(side-self.rotation, 3) in element.sides:
+					return element
+		return Element()
 
-		if found:
-			for i in elementName:
-				if loopInt(side-self.rotation, 3) in self.elements[i]:
-					return True
+	def existElement(self, name, side):
+		for element in self.elements:
+			if element.name == name and loopInt(side-self.rotation, 3) in element.sides:
+				return True
 		return False
 
 	def isCompatibleWith(self, side, tile):
 		opposedSide = loopInt(side-2, 3)
 		possibilities = []
-
 		for rotation in range(0,4):
 			for element in self.elements:
-				if loopInt(side-rotation, 3) in self.elements[element]:
-					if tile.existElement(element, opposedSide):
+				if loopInt(side-rotation, 3) in element.sides:
+					if tile.existElement(element.name, opposedSide):
 						possibilities.append(rotation)
 
 		return possibilities
 
-	def rotate(self):
-		self.rotation = loopInt(self.rotation+1, 3)
+	def rotate(self, plus=1):
+		self.rotation = loopInt(self.rotation+plus, 3)
 
 class Player:
 	def __init__(self, name):
 		self.name = name
-		self.nbPawns = int(7)
+		self.nbPawns = 7
 		self.nbBigPawns = 1
 
 		self.score = 0
