@@ -1,0 +1,64 @@
+0
+Alexis 3 1 50
+Tristan 2 1 35
+;
+4,-3 tile.013 0
+3,-2 tile.023 0
+-2,-4 tile.018 3
+-1,0 tile.023 1
+-3,-2 tile.010 1 1:road:4:1
+3,-3 tile.004 2
+2,1 tile.014 1
+7,-2 tile.015 0
+3,-1 tile.010 3
+2,-1 tile.016 2
+5,-5 tile.014 0
+1,-2 tile.008 2
+4,-1 tile.001 0
+2,-4 tile.009 3
+-2,1 tile.013 1
+-1,-4 tile.007 0
+6,-4 tile.003 0
+-2,0 tile.017 0
+-3,-1 tile.016 0
+4,-2 tile.014 0
+3,0 tile.002 3
+3,-4 tile.008 0
+7,-3 tile.017 1 1:city:4:1
+-2,-1 tile.024 2
+1,-3 tile.012 0
+4,0 tile.002 1
+4,1 tile.015 2 0:city:4:1
+1,1 tile.013 0
+0,-5 tile.007 1
+2,-6 tile.021 0
+5,-2 tile.014 2
+8,-2 tile.020 3
+0,0 tile.018 0
+7,-1 tile.011 1 0:city:4:1
+-1,-1 tile.024 0
+3,-5 tile.018 2
+2,-2 tile.009 0
+2,-3 tile.002 2
+-1,-2 tile.024 2
+1,-1 tile.019 0
+0,-1 tile.019 0
+7,-4 tile.017 1 0:city:4:1
+1,0 tile.023 1 1:field:4:1
+2,-5 tile.022 0
+5,-3 tile.008 0
+0,-3 tile.022 3
+4,-4 tile.019 0 1:abbey:4:1
+-4,-1 tile.023 1
+0,-6 tile.014 0
+-4,0 tile.020 1
+1,-4 tile.024 0
+-2,-2 tile.024 0 0:field:4:1
+-3,0 tile.018 2
+6,-2 tile.019 0 1:abbey:4:1
+2,0 tile.024 0
+0,-2 tile.024 0
+5,-4 tile.012 3
+0,-4 tile.010 1
+;
+tile.023 tile.022 tile.005 tile.022 tile.023 tile.024 tile.016 tile.024 tile.015 tile.023 tile.006 tile.023 tile.005 tile.011

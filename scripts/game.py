@@ -14,6 +14,10 @@ class Game:
 	def __init__(self, tileFilePath, mapFilePath, defaultStackPath):
 		self.scene = logic.getCurrentScene()
 
+		self.tiles = dict() # Store the different possible tiles
+		self.map = dict() #Contain the whole map, a this: self.map[Position([0,1])] = []
+		self.verticeMap = dict() #Store the vertices by position, like self.map
+
 		self.currentTile = Tile("") # The name of the upper tile in the stack
 		self.currentTileObj = logic.getCurrentScene().objects["tile"]
 
@@ -22,13 +26,12 @@ class Game:
 		self.abbeyList = [] # The list of abbey positions
 		self.possiblePos = [] # Store the possible position that the currentTile can take
 		self.possiblePosFlags = [] # Store the objects added to show possiblePos
+		self.verticeFlags = []
 		self.pawnObj = dict() # The list of pawns
-
-		self.tiles = dict() # Store the different possible tiles
-		self.map = dict() #Contain the whole map, a this: self.map[Position([0,1])] = []
 
 		self.pawnPut = False # If the pawn is already put in this turn
 		self.tilePut = True # If the tile is already put this turn
+		self.showLinks = 1
 
 		self.loadTilesFromFile(tileFilePath) # Load the tiles caracteristics
 		self.loadMapFromFile(mapFilePath, defaultStackPath) # Load a save
@@ -118,7 +121,7 @@ class Game:
 			fileTab = fileContent.split('\n')[0].split(' ')
 			random.shuffle(fileTab)
 			self.tileStack = fileTab
-
+		self.updateVerticeLinks()
 		configFile.close()
 
 	def saveMap(self, filePath):
@@ -164,20 +167,6 @@ class Game:
 			a.z = self.map[key][0].rotation * math.pi/2
 			self.map[key][1].orientation = a.to_matrix()
 
-	def convertSideToVector(self, side):
-		sideVect = []
-		if side == 0:
-			sideVect = [0,1]
-		elif side == 1:
-			sideVect = [-1,0]
-		elif side == 2:
-			sideVect = [0,-1]
-		elif side == 3:
-			sideVect = [1,0]
-		elif side == 4:
-			sideVect = [0,0]
-		return sideVect
-
 	def nextTurn(self):
 		if len(self.tileStack) == 0:
 			return False
@@ -199,8 +188,10 @@ class Game:
 			else:
 				break
 		self.currentTileObj = self.scene.addObject(self.tileStack[0])
+		self.currentTileObj.position[2] = -.005
 		self.showPossiblePos()
 		self.updateTiles()
+
 		return True
 
 	def addTile(self, tileID, position, rotation):
@@ -208,12 +199,14 @@ class Game:
 			self.abbeyList.append(position)
 
 		newTile = copy.deepcopy(self.tiles[tileID])
-		newTile.rotation = rotation
+		newTile.rotate(rotation, True)
 		newTile.position = position
+		newTile.createVertice(self.verticeMap)
 
 		tileObj = self.scene.addObject(tileID)
 		tileObj.position[0] = position.x
 		tileObj.position[1] = position.y
+		tileObj.position[2] = 0
 		a = tileObj.orientation.to_euler()
 		a.z = self.currentTile.rotation * math.pi/2
 		tileObj.orientation = a.to_matrix()
@@ -241,6 +234,7 @@ class Game:
 		del self.tileStack[0]
 		self.tilePut = True
 
+		self.updateVerticeLinks()
 		return True
 
 	def addPawn(self, position, element, value, player):
@@ -256,13 +250,15 @@ class Game:
 
 		side = 4
 		if element.sides:
-			side = loopInt(element.sides[0]+tile.rotation, 3)
+			side = element.sides[0]
 
 		#converting side:
-		sideVect = self.convertSideToVector(side)
-
-		pawnObj.position[0] = position.x + sideVect[0]*.30
-		pawnObj.position[1] = position.y + sideVect[1]*.30
+		sideVect = convertSideToVector(side)
+		modif = .3
+		if side > 4:
+			modif = .2
+		pawnObj.position[0] = position.x + sideVect[0]*modif
+		pawnObj.position[1] = position.y + sideVect[1]*modif
 
 		self.pawnPut = True
 		return True
@@ -282,8 +278,7 @@ class Game:
 			removeStack = []
 			for cpt,tile in enumerate(currentTileStack):
 				for side in tile[1]:
-					side = loopInt(side+tile[0].rotation, 3)
-					vect = self.convertSideToVector(side)
+					vect = convertSideToVector(side)
 
 					pos = Position([tile[0].position.x+vect[0], tile[0].position.y+vect[1]])
 					if not pos in self.map:
@@ -299,7 +294,7 @@ class Game:
 						boule = False
 						if e.name == element.name:
 							for eSide in e.sides:
-								if loopInt(eSide+newTile.rotation, 3) == opposedSide:
+								if eSide == opposedSide:
 									possibleSides = copy.deepcopy(e.sides)
 									elementsArchive.append(e)
 									boule = True
@@ -308,7 +303,7 @@ class Game:
 								break
 
 					for cptr,i in enumerate(possibleSides):
-						if loopInt(i+newTile.rotation, 3) == opposedSide:
+						if i == opposedSide:
 							del possibleSides[cptr]
 							break
 					futureTileStack.append([newTile, possibleSides])
@@ -335,9 +330,12 @@ class Game:
 		if self.pawnPut or value == 1 and self.player.nbPawns == 0 or value == 2 and self.player.nbBigPawns == 0:
 			return False
 
-		tileArchiveStack = self.ridePath(element)[0]
+		if element.name == "empty":
+			return False
 
-		if element.name != "field":
+		if element.sides[0] < 4:
+			tileArchiveStack = self.ridePath(element)[0]
+
 			for tilePos in tileArchiveStack:
 				for pawn in self.map[tilePos][0].pawns:
 					if pawn.element.name == element.name:
@@ -354,7 +352,7 @@ class Game:
 
 	def countPoints(self):
 		for element in self.currentTile.elements:
-			if element.name == "field" or element.name == "abbey":
+			if element.name == "empty" or element.name == "abbey" or element.name == "field":
 				continue
 
 			ridePathResult = self.ridePath(element)
@@ -369,7 +367,10 @@ class Game:
 				for cp,pawn in enumerate(self.map[tilePos][0].pawns):
 					if pawn.element.name == element.name:
 						playersPoints[int(pawn.player)] += pawn.value
-						self.players[pawn.player].nbPawns += 1
+						if pawn.value == 2:
+							self.players[pawn.player].nbBigPawns += 1
+						else:
+							self.players[pawn.player].nbPawns += 1
 						if tilePos in self.pawnObj:
 							pawnObj = self.pawnObj[tilePos]
 							if pawnObj[1].name == element.name:
@@ -409,8 +410,8 @@ class Game:
 								self.players[cptr].score += 9
 								self.players[cptr].nbPawns += 1
 
-	def rotateTile(self):
-		self.currentTile.rotate()
+	def rotateTile(self, plus=1):
+		self.currentTile.rotate(plus)
 
 	def findPossiblePos(self):
 		self.possiblePos = []
@@ -480,3 +481,38 @@ class Game:
 		for obj in self.possiblePosFlags:
 			obj.endObject()
 		self.possiblePosFlags = []
+
+	def updateVerticeLinks(self):
+		for tile in self.map.values():
+			tile[0].buildVertice(self.verticeMap, self.map)
+		if self.showLinks:
+			self.hideVerticeLinks()
+			self.showVerticeLinks()
+		else:
+			self.hideVerticeLinks()
+
+	def showVerticeLinks(self):
+		for vertex in self.verticeMap.values():
+			tile = vertex.tile
+			for neighbor in vertex.neighbors:
+				pos = [tile.position.x - 0.5 + vertex.internVect[0]/2 +.25 + neighbor[2][0]/8,
+						tile.position.y - 0.5 + vertex.internVect[1]/2 +.25 + neighbor[2][1]/8,
+						1]
+				obj = self.scene.addObject("line.black")
+				if neighbor[1] == "closed":
+					obj = self.scene.addObject("line.red")
+				elif neighbor[1] == "linked":
+					obj = self.scene.addObject("line.green")
+				elif neighbor[1] == "open":
+						obj = self.scene.addObject("line.white")
+				obj.position = pos
+				if abs(neighbor[2][1]) == 1:
+					a = obj.orientation.to_euler()
+					a.z = math.pi/2
+					obj.orientation = a.to_matrix()
+				self.verticeFlags.append(obj)
+
+	def hideVerticeLinks(self):
+		for flag in self.verticeFlags:
+			flag.endObject()
+		self.verticeFlags = []

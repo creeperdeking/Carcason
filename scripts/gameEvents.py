@@ -32,18 +32,24 @@ class GameEvents:
 		#The cam tracer is the object used to manipulate the position of the camera
 		self.camTracer = self.scene.objects["camera"]
 
+		logic.mouse.position = (0.5,0.5)
+
 	def update(self):
 		# Mouse events:
 		mousePosX,mousePosY = logic.mouse.position
 
-		if mousePosX > 1:
+		if mousePosX >= 1:
 			mousePosX = 1
-		elif mousePosX < 0:
+			self.camTracer.applyMovement((.15, 0, 0), True)
+		elif mousePosX <= 0:
 			mousePosX = 0
-		if mousePosY > 1:
-			mousePosY = 1
-		elif mousePosY < 0:
+			self.camTracer.applyMovement((-.15, 0, 0), True)
+		if mousePosY <= 0:
 			mousePosY = 0
+			self.camTracer.applyMovement((0, .15, 0), True)
+		elif mousePosY >= 1:
+			mousePosY = 1
+			self.camTracer.applyMovement((0, -.15, 0), True)
 
 		# Update the screen with the current position of the mouse on the board
 		tilePos = [0, 0]
@@ -58,53 +64,51 @@ class GameEvents:
 		# For putting pawns:
 		if self.game.tilePut:
 			side = -1
-			if isPressedK(events.UPARROWKEY):
+			if isPressedK(events.ZKEY):
 				side = 0
-			elif isPressedK(events.LEFTARROWKEY):
+			elif isPressedK(events.QKEY):
 				side = 1
-			elif isPressedK(events.RIGHTARROWKEY):
+			elif isPressedK(events.DKEY):
 				side = 3
-			elif isPressedK(events.DOWNARROWKEY):
+			elif isPressedK(events.SKEY):
 				side = 2
-			elif isPressedK(events.RIGHTCTRLKEY):
+			elif isPressedK(events.LEFTCTRLKEY):
 				side = 4
+			elif isPressedK(events.AKEY):
+				side = 5
+			elif isPressedK(events.WKEY):
+				side = 6
+			elif isPressedK(events.CKEY):
+				side = 7
+			elif isPressedK(events.EKEY):
+				side = 8
 
 			if side > -1:
-				if not side == 4:
-					side = loopInt(side-self.game.currentTile.rotation, 3)
-
+				value = 1
+				if isActivatedK(events.LEFTSHIFTKEY):
+					value = 2
+				if side > 4:
+					self.game.putPawn(Element("field", [side]), value)
 				for element in self.game.currentTile.elements:
 					sides = element.sides
 					if side == 4:
 						if not sides:
-							if isActivatedK(events.RIGHTSHIFTKEY):
-								self.game.putPawn(element,2)
-							else:
-								self.game.putPawn(element,1)
+							self.game.putPawn(element,value)
 					elif side in sides:
-						if isActivatedK(events.RIGHTSHIFTKEY):
-							self.game.putPawn(element,2)
-						else:
-							self.game.putPawn(element,1)
-
-		if isActivatedK(events.ZKEY):
-			self.camTracer.applyMovement((0, .15, 0), True)
-		if isActivatedK(events.SKEY):
-			self.camTracer.applyMovement((0, -.15, 0), True)
-		if isActivatedK(events.QKEY):
-			self.camTracer.applyMovement((-.15, 0, 0), True)
-		if isActivatedK(events.DKEY):
-			self.camTracer.applyMovement((.15, 0, 0), True)
+						self.game.putPawn(element,value)
 
 		if isPressedK(events.SKEY) and isActivatedK(events.LEFTCTRLKEY):
 			self.game.saveMap(bge.logic.expandPath("//"+self.savingPath))
 			print("Map saved!")
 
-		if isPressedK(events.RKEY):
-			self.game.rotateTile()
+		if isPressedK(events.SPACEKEY) and self.game.tilePut == False:
+			self.game.rotateTile(1)
+
+		if isPressedK(events.VKEY):
+			self.game.showLinks = loopInt(self.game.showLinks+1, 1)
 
 		#Start a new turn:
-		if isPressedK(events.ENTERKEY):
+		if isPressedK(events.SPACEKEY):
 			if self.game.tilePut:
 				self.game.countPoints()
 				for player in self.game.players:
