@@ -1,5 +1,6 @@
 import pdb
 import math
+import copy
 
 def convertSideToVector(side):
 	sideVect = [0,0]
@@ -77,6 +78,7 @@ class Vertice:
 	def __init__(self, position=Position(), tile=None, internVect=[0,0]):
 		self.position = position
 		self.tile = tile
+		self.pawn = None
 
 		self.internVect = internVect
 
@@ -121,6 +123,8 @@ class Vertice:
 					if element.name == "city":
 						if sideToCheck in element.sides and loopInt(sideToCheck+2,3) in element.sides:
 							canLink = False
+						if sideToCheck in element.sides and loopInt(sideToCheck+1,3) in element.sides and loopInt(sideToCheck+3,3) in element.sides:
+							canLink = False
 				if canLink:
 					self.neighbors.append([verticeMap[pos], "linked", vect])
 				else:
@@ -136,13 +140,16 @@ class Vertice:
 				else:
 					self.neighbors.append([Vertice(), "closed", vect])
 
+	def __eq__(self, other):
+		return (self.position) == (other.position)
+
 
 class Tile:
 	def __init__(self, ID, elements=list()):
 		self.ID = ID
 		self.rotation = 0
 
-		self.elements = elements
+		self.elements = copy.deepcopy(elements)
 		self.position = Position()
 
 		self.pawns = []
@@ -150,11 +157,15 @@ class Tile:
 		self.vertices = []
 
 	def addPawn(self, player, element, value):
-		self.pawns.append(Pawn(player, element, value))
+		newPawn = Pawn(player, element, value)
+		if element.sides[0] > 4:
+			print(element.sides[0]-5)
+			self.vertices[element.sides[0]-5].pawn = newPawn
+		self.pawns.append(newPawn)
 
 	def createVertice(self, verticeMap):
-		verticePos = [[Position([self.position.x*2,self.position.y*2+1]), [0,1]],
-						[Position([self.position.x*2,self.position.y*2]), [0,0]],
+		verticePos = [[Position([self.position.x*2,self.position.y*2]), [0,0]],
+						[Position([self.position.x*2,self.position.y*2+1]), [0,1]],
 						[Position([self.position.x*2+1,self.position.y*2]), [1,0]],
 						[Position([self.position.x*2+1,self.position.y*2+1]), [1,1]],
 		]
@@ -168,9 +179,10 @@ class Tile:
 			v.buildLinks(verticeMap, map)
 
 	def getElement(self, name, side):
+
 		for element in self.elements:
 			if element.name == name:
-				if side == 4 or side in element.sides:
+				if side in element.sides:
 					return element
 		return Element()
 
@@ -196,6 +208,8 @@ class Tile:
 			self.rotation = 0
 		self.rotation = loopInt(self.rotation+plus, 3)
 		for element in self.elements:
+			if element.name == "abbey":
+				continue
 			newSides = []
 			for side in element.sides:
 				newSides.append(loopInt(side+plus, 3))

@@ -27,11 +27,13 @@ class Game:
 		self.possiblePos = [] # Store the possible position that the currentTile can take
 		self.possiblePosFlags = [] # Store the objects added to show possiblePos
 		self.verticeFlags = []
-		self.pawnObj = dict() # The list of pawns
+		self.pawnsObj = dict() # The list of pawns
 
 		self.pawnPut = False # If the pawn is already put in this turn
 		self.tilePut = True # If the tile is already put this turn
-		self.showLinks = 1
+		self.showLinks = 0
+
+		self.camTracer = self.scene.objects["camera"]
 
 		self.loadTilesFromFile(tileFilePath) # Load the tiles caracteristics
 		self.loadMapFromFile(mapFilePath, defaultStackPath) # Load a save
@@ -51,6 +53,7 @@ class Game:
 		elements = []
 		for line in fileTable:
 			if line == ';':
+
 				self.tiles[tileID] = Tile(tileID, elements)
 				first = True
 				elements = []
@@ -65,10 +68,7 @@ class Game:
 				del words[0]
 				#A tile element is defined as this:
 				#example: elements["tile.001"] = [[0,1]]
-				if len(words) == 0:
-					elements.append(Element(name, []))
-				else:
-					elements.append(Element(name,list(map(int, words[1].split(','))), int(words[0])))
+				elements.append(Element(name,list(map(int, words[1].split(','))), int(words[0])))
 		configFile.close()
 
 	def loadMapFromFile(self, filePath, defaultStackPath):
@@ -136,10 +136,8 @@ class Game:
 			pawnsString = " "
 
 			for pawn in tile[0].pawns:
-				sidee = 4
-				if pawn.element.sides:
-					side = pawn.element.sides[0]
-				pawnsString += str(pawn.player)+":"+pawn.element.name+":"+str(sidee)+":"+str(pawn.value)+" "
+				side = pawn.element.sides[0]
+				pawnsString += str(pawn.player)+":"+pawn.element.name+":"+str(side)+":"+str(pawn.value)+" "
 			pawnsString = pawnsString[:-1]
 			configFile.write(str(key.x)+","+str(key.y)+" "+tile[0].ID+" "+str(tile[0].rotation)+pawnsString+"\n")
 		configFile.write(";\n")
@@ -211,6 +209,7 @@ class Game:
 		a.z = self.currentTile.rotation * math.pi/2
 		tileObj.orientation = a.to_matrix()
 
+
 		self.map[position] = [newTile, tileObj]
 		return newTile
 
@@ -241,16 +240,14 @@ class Game:
 		tile = self.map[position][0]
 		tile.addPawn(player, element, value)
 
-		pawnObj = 0
+		pawnObj = None
 		if value == 2:
 			pawnObj = self.scene.addObject("bigPawn.00"+str(player+1))
 		else:
 			pawnObj = self.scene.addObject("pawn.00"+str(player+1))
-		self.pawnObj[position] = [pawnObj, element]
+		self.pawnsObj[position] = [pawnObj, element]
 
-		side = 4
-		if element.sides:
-			side = element.sides[0]
+		side = element.sides[0]
 
 		#converting side:
 		sideVect = convertSideToVector(side)
@@ -351,6 +348,7 @@ class Game:
 		return True
 
 	def countPoints(self):
+		print("DEBUG: counting points")
 		for element in self.currentTile.elements:
 			if element.name == "empty" or element.name == "abbey" or element.name == "field":
 				continue
@@ -371,11 +369,11 @@ class Game:
 							self.players[pawn.player].nbBigPawns += 1
 						else:
 							self.players[pawn.player].nbPawns += 1
-						if tilePos in self.pawnObj:
-							pawnObj = self.pawnObj[tilePos]
+						if tilePos in self.pawnsObj:
+							pawnObj = self.pawnsObj[tilePos]
 							if pawnObj[1].name == element.name:
 								pawnObj[0].endObject()
-								del self.pawnObj[tilePos]
+								del self.pawnsObj[tilePos]
 						del self.map[tilePos][0].pawns[cp]
 						break
 
@@ -403,12 +401,59 @@ class Game:
 					if pawn.element.name == "abbey":
 						for cptr in range(0, len(self.players)):
 							if pawn.player == cptr:
-								pObj = self.pawnObj[abbeyPos]
+								pObj = self.pawnsObj[abbeyPos]
 								if pObj[1].name == "abbey":
 									pObj[0].endObject()
 									del self.map[abbeyPos][0].pawns[cp]
 								self.players[cptr].score += 9
 								self.players[cptr].nbPawns += 1
+
+	def countFieldsPoints(self):
+		fields = []
+
+		for vertex in self.verticeMap.values():
+			pawn = False
+			if vertex.pawn:
+				pawn = True
+
+			vertexFieldsNb = []
+			isOpen = False
+			closed = 0
+			for neighbor in vertex.neighbors:
+				if neighbor[1] == "open":
+					isOpen = True
+				elif neighbor[1] == "closed":
+					closed += 1
+					continue
+				elif neighbor[1] == "linked":
+					for cptr,field in enumerate(fields):
+						if neighbor[0] in field[0] and cptr not in vertexFieldsNb:
+							vertexFieldsNb.append(cptr)
+				else:
+					print("countFieldPoints: WTF?!")
+			if closed == 4:
+				continue
+
+
+			if not vertexFieldsNb:
+				fields.append([[copy.deepcopy(vertex)], isOpen, pawn])
+			else:
+				vertexFieldsNb = sorted(vertexFieldsNb)
+				fields[vertexFieldsNb[0]][0].append(copy.deepcopy(vertex))
+				fields[vertexFieldsNb[0]][1] = isOpen
+				if pawn == True:
+					fields[vertexFieldsNb[0]][2] = pawn
+				#pdb.set_trace()
+				for nb in range(1,len(vertexFieldsNb)):
+					fields[vertexFieldsNb[0]][0] += fields[vertexFieldsNb[nb]][0]
+
+				for nb in range(0,len(vertexFieldsNb)-1):
+					del fields[vertexFieldsNb[len(vertexFieldsNb)-1-nb]]
+
+		for field in fields:
+			if field[2] == True:
+				print(len(field[0]),field[1])
+		print(len(fields))
 
 	def rotateTile(self, plus=1):
 		self.currentTile.rotate(plus)
@@ -516,3 +561,14 @@ class Game:
 		for flag in self.verticeFlags:
 			flag.endObject()
 		self.verticeFlags = []
+
+	def endGame(self):
+		winner = 0
+		self.countFieldsPoints()
+		for cptr,player in enumerate(self.players):
+			if player.score > self.players[winner].score:
+				winner = cptr
+		obj = self.scene.addObject("pawn.00"+str(winner+1))
+		obj.scaling *= 9
+		obj.position = self.camTracer.position
+		obj.position.z = 0

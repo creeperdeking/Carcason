@@ -30,7 +30,7 @@ class GameEvents:
 
 		self.baseTile = self.scene.objects["tile"]
 		#The cam tracer is the object used to manipulate the position of the camera
-		self.camTracer = self.scene.objects["camera"]
+		self.camTracer = self.game.camTracer
 
 		logic.mouse.position = (0.5,0.5)
 
@@ -90,16 +90,16 @@ class GameEvents:
 				if side > 4:
 					self.game.putPawn(Element("field", [side]), value)
 				for element in self.game.currentTile.elements:
-					sides = element.sides
-					if side == 4:
-						if not sides:
-							self.game.putPawn(element,value)
-					elif side in sides:
+					if side in element.sides:
 						self.game.putPawn(element,value)
 
-		if isPressedK(events.SKEY) and isActivatedK(events.LEFTCTRLKEY):
-			self.game.saveMap(bge.logic.expandPath("//"+self.savingPath))
-			print("Map saved!")
+		if isActivatedK(events.LEFTCTRLKEY):
+			if isPressedK(events.SKEY):
+				self.game.saveMap(bge.logic.expandPath("//"+self.savingPath))
+				print("Map saved!")
+
+			if isPressedK(events.TKEY):
+				self.game.countFieldsPoints()
 
 		if isPressedK(events.SPACEKEY) and self.game.tilePut == False:
 			self.game.rotateTile(1)
@@ -115,11 +115,5 @@ class GameEvents:
 					print(player.name, ":", player.score)
 				# We have to find a winner:
 				if self.game.nextTurn() == False:
-					winner = 0
-					for cptr,player in enumerate(self.game.players):
-						if player.score > self.game.players[winner].score:
-							winner = cptr
-					obj = self.scene.addObject("pawn.00"+str(winner+1))
-					obj.scaling *= 9
-					obj.position = self.camTracer.position
-					obj.position.z = 0
+					self.game.countFieldsPoints()
+					self.game.endGame()
