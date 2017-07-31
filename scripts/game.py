@@ -238,7 +238,6 @@ class Game:
 
 	def addPawn(self, position, element, value, player):
 		tile = self.map[position][0]
-		tile.addPawn(player, element, value)
 
 		pawnObj = None
 		if value == 2:
@@ -246,7 +245,7 @@ class Game:
 		else:
 			pawnObj = self.scene.addObject("pawn.00"+str(player+1))
 		self.pawnsObj[position] = [pawnObj, element]
-
+		tile.addPawn(player, element, value, pawnObj)
 		side = element.sides[0]
 
 		#converting side:
@@ -434,15 +433,18 @@ class Game:
 			if closed == 4:
 				continue
 
-
 			if not vertexFieldsNb:
-				fields.append([[copy.deepcopy(vertex)], isOpen, pawn])
+				if pawn:
+					fields.append([[vertex], isOpen, [vertex.pawn]])
+				else:
+					fields.append([[vertex], isOpen, []])
 			else:
 				vertexFieldsNb = sorted(vertexFieldsNb)
-				fields[vertexFieldsNb[0]][0].append(copy.deepcopy(vertex))
-				fields[vertexFieldsNb[0]][1] = isOpen
-				if pawn == True:
-					fields[vertexFieldsNb[0]][2] = pawn
+				fields[vertexFieldsNb[0]][0].append(vertex)
+				if isOpen:
+					fields[vertexFieldsNb[0]][1] = True
+				if pawn:
+					fields[vertexFieldsNb[0]][2].append(vertex.pawn)
 				#pdb.set_trace()
 				for nb in range(1,len(vertexFieldsNb)):
 					fields[vertexFieldsNb[0]][0] += fields[vertexFieldsNb[nb]][0]
@@ -450,9 +452,33 @@ class Game:
 				for nb in range(0,len(vertexFieldsNb)-1):
 					del fields[vertexFieldsNb[len(vertexFieldsNb)-1-nb]]
 
+		playersPoints = [0,0,0,0,0,0]
 		for field in fields:
-			if field[2] == True:
-				print(len(field[0]),field[1])
+			for pawn in field[2]:
+				playersPoints[pawn.player] += pawn.value
+				if pawn.value == 2:
+					self.players[pawn.player].nbBigPawns += 1
+				else:
+					self.players[pawn.player].nbPawns += 1
+				pawn.obj.endObject()
+				del pawn
+
+			if playersPoints == [0,0,0,0,0,0]:
+				continue
+
+			playerWinner = []
+			oldPlayerPoints = 0
+			for cptr,i in enumerate(playersPoints):
+				if i > oldPlayerPoints:
+					playerWinner = [cptr]
+					oldPlayerPoints = i
+				elif i == oldPlayerPoints:
+					playerWinner.append(cptr)
+			nbPoints = 6
+
+			for player in playerWinner:
+				self.players[player].score += nbPoints
+
 		print(len(fields))
 
 	def rotateTile(self, plus=1):

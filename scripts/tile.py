@@ -1,6 +1,13 @@
 import pdb
 import math
 import copy
+import bge
+
+import types
+
+def _deepcopy_method(x, memo):
+    return type(x)(x.im_func, copy.deepcopy(x.im_self, memo), x.im_class)
+copy._deepcopy_dispatch[types.MethodType] = _deepcopy_method
 
 def convertSideToVector(side):
 	sideVect = [0,0]
@@ -65,6 +72,7 @@ class Pawn:
 	def __init__(self, player, element, value=1):
 		self.player = int(player)
 		self.element = element
+		self.obj = None
 
 		self.value = value
 
@@ -156,12 +164,14 @@ class Tile:
 
 		self.vertices = []
 
-	def addPawn(self, player, element, value):
+	def addPawn(self, player, element, value, obj):
 		newPawn = Pawn(player, element, value)
+		newPawn.obj = obj
 		if element.sides[0] > 4:
 			print(element.sides[0]-5)
 			self.vertices[element.sides[0]-5].pawn = newPawn
-		self.pawns.append(newPawn)
+		else:
+			self.pawns.append(newPawn)
 
 	def createVertice(self, verticeMap):
 		verticePos = [[Position([self.position.x*2,self.position.y*2]), [0,0]],
