@@ -95,17 +95,19 @@ class GameEvents:
 
 		if isActivatedK(events.LEFTCTRLKEY):
 			if isPressedK(events.SKEY):
-				self.game.saveMap(bge.logic.expandPath("//"+self.savingPath))
+				self.game.map.saveMap(bge.logic.expandPath("//"+self.savingPath))
 				print("Map saved!")
 
 			if isPressedK(events.TKEY):
 				self.game.countFieldsPoints()
+			if isPressedK(events.QKEY):
+				self.game.endGame()
 
 		if isPressedK(events.SPACEKEY) and self.game.tilePut == False:
 			self.game.rotateTile(1)
 
 		if isPressedK(events.VKEY):
-			self.game.showLinks = loopInt(self.game.showLinks+1, 1)
+			self.game.map.showLinks = loopInt(self.game.showLinks+1, 1)
 
 		#Start a new turn:
 		if isPressedK(events.SPACEKEY):
@@ -115,5 +117,5 @@ class GameEvents:
 					print(player.name, ":", player.score)
 				# We have to find a winner:
 				if self.game.nextTurn() == False:
-					self.game.countFieldsPoints()
+					self.game.map.countFieldsPoints()
 					self.game.endGame()

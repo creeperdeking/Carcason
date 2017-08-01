@@ -11,5 +11,5 @@ Tristan 7 1 50
 0,1 tile.002 0 1:tileid
 1,1 tile.003 0 1:tileid
 ;
-#This is the current state of the tile stack
+#This is the current state of the tile stack, if equal to "none" then a new stack will be randomly generated with the tiles of defaultStack.caconf
 tile.004 tile.002 tile.002 tile.010 tile.015 tile.016

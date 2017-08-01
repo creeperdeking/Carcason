@@ -1,0 +1,7 @@
+open main.blend
+go to the second layer
+create your tile, put a material and a texture
+Give it a name
+Add the tile texture in //textures with tileID.png as his name
+Describe the tile in tiles.caconf
+Done!

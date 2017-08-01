@@ -1,0 +1,8 @@
+#The tile.caconf tile describe the possible tiles:
+#A tile is described as this:
+tile_ID
+element1_ID element_value side1,side2,side3
+element2_ID element_value side1
+etc...
+;
+etc...

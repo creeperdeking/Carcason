@@ -6,7 +6,7 @@ from scripts.gameEvents import *
 def main():
 	obj = logic.getCurrentController().owner
 	#Creating the core game class
-	obj["myGame"] = Game(bge.logic.expandPath("//tiles.caconf"), bge.logic.expandPath("//testMap.camap"), bge.logic.expandPath("//defaultStack.caconf"))
+	obj["myGame"] = Game(logic.expandPath("//tiles.caconf"), logic.expandPath("//map.camap"), logic.expandPath("//defaultStack.caconf"))
 	#Creating an instance to handle the events
-	obj["GameEvents"] = GameEvents(obj["myGame"], "testMap.camap")
+	obj["GameEvents"] = GameEvents(obj["myGame"], "map.camap")
 	myGame = obj["myGame"]
