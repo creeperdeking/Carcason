@@ -119,7 +119,7 @@ class GameEvents:
 			self.game.rotateTile(1)
 
 		if isPressedK(events.VKEY):
-			self.game.map.showLinks = loopInt(self.game.showLinks+1, 1)
+			self.game.map.showLinks = loopInt(self.game.map.showLinks+1, 1)
 
 		#Start a new turn:
 		if isPressedK(events.SPACEKEY):

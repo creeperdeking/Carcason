@@ -210,7 +210,7 @@ class Game:
 						return False
 		else:
 			vertex = self.map.map[self.currentTile.position][0].vertices[element.sides[0]-5]
-			if self.pawnInField(vertex):
+			if self.map.pawnInField(vertex):
 				return False
 
 		if not self.addPawn(self.currentTile.position, element, value, self.currentPlayer):

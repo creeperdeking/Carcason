@@ -13,6 +13,8 @@ Except as contained in this notice, the name of the <copyright holders> shall no
 from scripts.utils import *
 from scripts.tile import *
 
+import random
+
 import bge
 import bge.logic as logic
 import bge.events as events
