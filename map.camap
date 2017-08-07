@@ -1,7 +1,11 @@
-0
-Alexis 7 1 0
-Tristan 7 1 0
+1
+Alexis 6 1 0
+Tristan 6 1 8
 ;
+0,1 tile.011 1
+2,0 tile.024 0 0:road:2:1
+1,0 tile.022 0 1:field:8:1
 0,0 tile.018 0
+-1,1 tile.013 0
 ;
-none
+tile.023 tile.013 tile.024 tile.009 tile.016 tile.023 tile.014 tile.008 tile.018 tile.016 tile.011 tile.015 tile.003 tile.018 tile.008 tile.024 tile.001 tile.019 tile.019 tile.024 tile.023 tile.024 tile.017 tile.013 tile.014 tile.023 tile.023 tile.004 tile.005 tile.023 tile.014 tile.024 tile.015 tile.024 tile.024 tile.019 tile.022 tile.006 tile.018 tile.016 tile.014 tile.009 tile.021 tile.017 tile.010 tile.015 tile.020 tile.010 tile.002 tile.023 tile.007 tile.019 tile.005 tile.012 tile.007 tile.022 tile.023 tile.012 tile.010 tile.022 tile.014 tile.017 tile.018 tile.020 tile.008 tile.024 tile.002 tile.002

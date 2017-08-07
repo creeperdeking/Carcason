@@ -23,11 +23,14 @@ import bge.events as events
 from scripts.utils import *
 from scripts.tile import *
 from scripts.map import *
+from scripts.UI import *
 
 #The class holding the whole game
 class Game:
 	def __init__(self, tileFilePath, mapFilePath, defaultStackPath):
 		self.scene = logic.getCurrentScene()
+
+		self.interface = UI()
 
 		self.tiles = dict() # Store the different possible tiles
 		self.map = CarcaMap(self) #Contain the whole map, a this: self.map.map[Position([0,1])] = []
@@ -111,6 +114,7 @@ class Game:
 		self.player = self.players[self.currentPlayer]
 		print("\n New Turn: player="+self.player.name)
 		print("Remaining tiles:", len(self.tileStack))
+		self.interface.setPlayer(self.currentPlayer)
 
 		while 2+2 != 5:
 			self.currentTile = copy.deepcopy(self.tiles[self.tileStack[0]])
@@ -124,6 +128,8 @@ class Game:
 		self.currentTileObj.position[2] = -.05
 		self.map.showPossiblePos()
 		self.updateTiles()
+
+		self.interface.update(len(self.tileStack), self.players)
 
 		return True
 
