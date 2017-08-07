@@ -50,17 +50,21 @@ class GameEvents:
 		# Mouse events:
 		mousePosX,mousePosY = logic.mouse.position
 
-		if mousePosX >= 1:
-			mousePosX = 1
+		if mousePosX >= .9:
+			if mousePosX > 1:
+				mousePosX = 1
 			self.camTracer.applyMovement((.15, 0, 0), True)
-		elif mousePosX <= 0:
-			mousePosX = 0
+		elif mousePosX <= .1:
+			if mousePosX < 0:
+				mousePosX = 0
 			self.camTracer.applyMovement((-.15, 0, 0), True)
-		if mousePosY <= 0:
-			mousePosY = 0
+		if mousePosY <= .1:
+			if mousePosY < 0:
+				mousePosY = 0
 			self.camTracer.applyMovement((0, .15, 0), True)
-		elif mousePosY >= 1:
-			mousePosY = 1
+		elif mousePosY >= .9:
+			if mousePosY > 1:
+				mousePosY = 1
 			self.camTracer.applyMovement((0, -.15, 0), True)
 
 		# Update the screen with the current position of the mouse on the board

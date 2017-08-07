@@ -49,7 +49,8 @@ class UI:
 
 		self.clearObjList()
 		for cptr,player in enumerate(playersRef):
-			self.showNbr(player.nbPawns, "playerScoreFlag."+str(cptr))
+			self.showNbr(player.score, "playerScoreFlag."+str(cptr))
+			self.showNbr(player.nbPawns, "pawnNb."+str(cptr))
 		self.showNbr(nbTiles, "nbTileFlag")
 
 	def setPlayer(self, playerNumber):
